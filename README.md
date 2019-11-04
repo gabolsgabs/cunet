@@ -1,5 +1,9 @@
 # Conditioned-U-Net for multitask musical instrument source separations
 
+
+**NOTE:** the code is being porting to tf 2.0. Currently, only the model architectures are available. The whole pipeline and some audio examples will be available soon.
+
+
 ## Overview:
 
 In this work we introduce a control mechanisms to the U-Net architecture.
