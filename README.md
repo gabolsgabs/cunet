@@ -67,6 +67,10 @@ Cite this paper:
 	Title = {CONDITIONED-U-NET: Introducing a Control Mechanism in the U-net For Multiple Source Separations.},
 	Year = {2019}}
 
+You can contact us at:
+
+  > gabriel dot meseguerbrocal at ircam dot fr
+
 
 #### References:
 
