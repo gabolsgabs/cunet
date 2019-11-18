@@ -5,10 +5,11 @@ from tensorflow.keras.layers import (
     BatchNormalization, LeakyReLU, Dropout, Concatenate
 )
 from tensorflow.keras.optimizers import Adam
-from models.FiLM_utils import (
+from cunet.models.FiLM_utils import (
     FiLM_simple_layer, FiLM_complex_layer, slice_tensor, slice_tensor_range
 )
-from models.control_models import dense_control, cnn_control
+from cunet.models.control_models import dense_control, cnn_control
+from cunet.config import config
 
 
 def get_activation(name):
@@ -17,8 +18,9 @@ def get_activation(name):
     return tf.keras.activations.get(name)
 
 
-def u_net_conv_block(x, n_filters, initializer, gamma, beta,
-                     activation='leaky_relu', film_type='simple'):
+def u_net_conv_block(
+    x, n_filters, initializer, gamma, beta, activation, film_type
+):
     x = Conv2D(n_filters, (5, 5),  padding='same', strides=(2, 2),
                kernel_initializer=initializer)(x)
     x = BatchNormalization(momentum=0.9, scale=True)(x)
@@ -30,8 +32,9 @@ def u_net_conv_block(x, n_filters, initializer, gamma, beta,
     return x
 
 
-def u_net_deconv_block(x_decod, x_encod, n_filters, initializer, activation,
-                       dropout, skip):
+def u_net_deconv_block(
+    x_decod, x_encod, n_filters, initializer, activation, dropout, skip
+):
     x = x_encod
     if skip:
         x = Concatenate(axis=3)([x_decod, x])
@@ -45,43 +48,35 @@ def u_net_deconv_block(x_decod, x_encod, n_filters, initializer, activation,
     return x
 
 
-def cunet_model(
-    input_shape=(512, 128, 1), filters_layer_1=16, n_layers=6, lr=0.001,
-    act_last='sigmoid', control_type='dense', film_type='simple', **kargs
-):
-    n_freq, n_frame, _ = input_shape
+def cunet_model():
     # axis should be fr, time -> right not it's time freqs
-    inputs = Input(shape=input_shape)
+    inputs = Input(shape=config.INPUT_SHAPE)
+    n_layers = config.N_LAYERS
     x = inputs
     encoder_layers = []
     initializer = tf.random_normal_initializer(stddev=0.02)
 
-    if control_type == 'dense' and film_type == 'simple':
+    if config.CONTROL_TYPE == 'dense':
         input_conditions, gammas, betas = dense_control(
-            n_conditions=6, n_neurons=[16, 64, 256])
-    if control_type == 'cnn' and film_type == 'simple':
+            n_conditions=config.N_CONDITIONS, n_neurons=config.N_NEURONS)
+    if config.CONTROL_TYPE == 'cnn':
         input_conditions, gammas, betas = cnn_control(
-            n_conditions=6, n_filters=[16, 32, 64])
-    if control_type == 'dense' and film_type == 'complex':
-        input_conditions, gammas, betas = dense_control(
-            n_conditions=1008, n_neurons=[16, 256, 1024])
-    if control_type == 'cnn' and film_type == 'complex':
-        input_conditions, gammas, betas = cnn_control(
-            n_conditions=1008, n_filters=[32, 64, 252])
-
+            n_conditions=config.N_CONDITIONS, n_filters=config.N_FILTERS)
     # Encoder
     complex_index = 0
     for i in range(n_layers):
-        filters = filters_layer_1 * (2 ** i)
-        if film_type == 'simple':
+        n_filters = config.FILTERS_LAYER_1 * (2 ** i)
+        if config.FILM_TYPE == 'simple':
             gamma, beta = slice_tensor(i)(gammas), slice_tensor(i)(betas)
-        if film_type == 'complex':
-            init, end = complex_index, complex_index+filters
+        if config.FILM_TYPE == 'complex':
+            init, end = complex_index, complex_index+n_filters
             gamma = slice_tensor_range(init, end)(gammas)
             beta = slice_tensor_range(init, end)(betas)
-            complex_index += filters
+            complex_index += n_filters
         x = u_net_conv_block(
-            x, filters, initializer, gamma, beta, film_type=film_type)
+            x, n_filters, initializer, gamma, beta,
+            activation=config.ACTIVATION_ENCODER, film_type=config.FILM_TYPE
+        )
         encoder_layers.append(x)
     # Decoder
     for i in range(n_layers):
@@ -93,14 +88,15 @@ def cunet_model(
         encoder_layer = encoder_layers[n_layers - i - 1]
         skip = i > 0    # not skip in the first encoder block
         if is_final_block:
-            filters = 1
-            activation = act_last
+            n_filters = 1
+            activation = config.ACT_LAST
         else:
-            filters = encoder_layer.get_shape().as_list()[-1] // 2
-            activation = 'relu'
+            n_filters = encoder_layer.get_shape().as_list()[-1] // 2
+            activation = config.ACTIVATION_DECODER
         x = u_net_deconv_block(
-            x, encoder_layer, filters, initializer, activation, dropout, skip)
+            x, encoder_layer, n_filters, initializer, activation, dropout, skip
+        )
     outputs = multiply([inputs, x])
     model = Model(inputs=[inputs, input_conditions], outputs=outputs)
-    model.compile(optimizer=Adam(lr=lr), loss='mean_absolute_error')
+    model.compile(optimizer=Adam(lr=config.LR), loss=config.LOSS)
     return model
