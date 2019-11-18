@@ -57,7 +57,7 @@ def cnn_block(
     return x
 
 
-def cnn_control(n_conditions, n_filters, initializer='he_normal'):
+def cnn_control(n_conditions, n_filters):
     """
     For simple dense control:
         - n_conditions = 6
