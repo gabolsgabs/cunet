@@ -1,4 +1,4 @@
-/models/*old.py
+/cunet/models/*old.py
 
 *.DS_Store
 # Byte-compiled / optimized / DLL files
