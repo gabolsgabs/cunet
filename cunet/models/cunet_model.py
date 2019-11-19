@@ -9,7 +9,7 @@ from cunet.models.FiLM_utils import (
     FiLM_simple_layer, FiLM_complex_layer, slice_tensor, slice_tensor_range
 )
 from cunet.models.control_models import dense_control, cnn_control
-from cunet.config import config
+from cunet.models.config import config
 
 
 def get_activation(name):

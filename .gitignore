@@ -1,4 +1,5 @@
-/cunet/models/*old.py
+/cunet/models/old/
+/cunet/preprocess/val_songs.py
 
 *.DS_Store
 # Byte-compiled / optimized / DLL files
