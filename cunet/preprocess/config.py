@@ -11,8 +11,10 @@ class config(Config):
     N_FFT = None
     INTRUMENTS = ['bass', 'drums', 'rest', 'vocals', 'mix']
     CONDITIONS = ['bass', 'drums', 'rest', 'vocals']
-    COMPLEX = 1     # complex conditions -> 1 only original instrumets, 2 combination of 2 instruments, etc
-    ADD_ZERO = True    # add the zero condition
-    ADD_ALL = True     # add the all mix condition
-    ADD_IN_BETWEEN = [1.]   # in between values for the combination of several instruments
-    CHUNK_SIZE = 1
+    CONDITION_MIX = 1       # complex conditions -> 1 only original instrumets, 2 combination of 2 instruments, etc
+    ADD_ZERO = True         # add the zero condition
+    ADD_ALL = True          # add the all mix condition
+    ADD_IN_BETWEEN = 1.     # in between interval for the combination of several instruments
+    STEP = 1                # step in frames for creating the input data
+    CHUNK_SIZE = 32         # chunking the indexes before mixing
+    PROGRESSIVE = True

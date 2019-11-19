@@ -9,7 +9,3 @@ class config(Config):
     TARGET = 'vocals'   # only for standard version
     BATCH_SIZE = 32
     N_BATCH = 256
-
-    # conditioned general
-    TRAIN_TYPE = 'progressive'   # or normal
-    CONDITION_MIX = 1   # number of instruments combinations
