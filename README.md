@@ -55,7 +55,7 @@ The condition generator takes as input a vector with the desired instrument to s
 Both systems are trained jointly.
 
 You can find a detailed explanation at:
-**[Meseguer-Brocal_2018]** [G. Meseguer-Brocal and G. Peeters. CONDITIONED-U-NET: Introducing a Control Mechanism in the U-net For Multiple Source Separations.](http://archives.ismir.net/ismir2019/paper/000017.pdf)
+**[Meseguer-Brocal_2018]** [G. Meseguer-Brocal and G. Peeters. CONDITIONED-U-NET: Introducing a Control Mechanism in the U-net For Multiple Source Separations.](https://zenodo.org/record/3527766) or a new version with small corrections at [arxiv](https://arxiv.org/abs/1907.01277).
 
 Cite this paper:
 

@@ -3,7 +3,7 @@ import copy
 import itertools
 import os
 from cunet.preprocess.config import config
-from cunet.models.config import config as config_model
+from cunet.config import config as config_general
 from glob import glob
 import logging
 
@@ -30,7 +30,7 @@ def get_conditions():
     )
     for cond in conditions_raw:
         for index in np.nonzero(cond)[0]:
-            # adding intermedia values to the conditions
+            # adding intermedia values to the conditions - in between idea
             for b in in_between:
                 tmp = copy.deepcopy(cond)
                 tmp[index] = tmp[index]*b
@@ -61,13 +61,16 @@ def get_indexes(conditions, time_r):
             logger.info('Input points for track %s' % f)
             file_length = np.load(f)[config.INTRUMENTS[0]].shape[1]  # in frames
             s = []
+            name = os.path.basename(os.path.normpath(f)).replace('.npz', '')
             for j in np.arange(0, file_length-time_r, config.STEP):
                 if len(conditions) > 0:
                     for c in conditions:
-                        s.append([f, j, c])
+                        s.append([name, j, c])
                 else:
-                    s.append([f, j])
-            s = list(np.asarray(s, dtype=object)[np.random.permutation(len(s))])
+                    s.append([name, j])
+            s = list(
+                np.asarray(s, dtype=object)[np.random.permutation(len(s))]
+            )
             indexes += s
         logger.info('Chunking the data points')
         # chunking the indexes before mixing -> create groups of CHUNK_SIZE
@@ -85,24 +88,32 @@ def get_indexes(conditions, time_r):
 
 def main():
     logging.basicConfig(
-        filename=os.path.join(config.PATH_SPEC, 'getting_indexes.log'),
+        filename=os.path.join(config.PATH_INDEXES, 'getting_indexes.log'),
         level=logging.INFO
     )
     logger = logging.getLogger('getting_indexes')
     logger.info('Starting the computation')
-    freq_r, time_r = config_model.INPUT_SHAPE[:2]
+    freq_r, time_r = config_general.INPUT_SHAPE[:2]
     conditions = []
-    if config_model == 'conditioned':
+    name = "_".join([
+        'indexes', config.MODE, str(config.STEP), str(config.CHUNK_SIZE)
+    ])
+    if config.MODE == 'conditioned':
         conditions = get_conditions()
+        name = "_".join([
+            name, str(config.CONDITION_MIX), str(config.ADD_ALL),
+            str(config.ADD_ZERO), str(config.ADD_IN_BETWEEN)
+        ])
     indexes = get_indexes(conditions, time_r)
     logger.info('Saving')
     np.savez(
-        os.path.join(config.PATH_SPEC, 'indexes.npz'),
-        indexes=indexes, conditions=conditions
+        os.path.join(config.PATH_INDEXES, name),
+        indexes=indexes, conditions=conditions, config=str(config)
     )
     logger.info('Done!')
     return
 
 
 if __name__ == "__main__":
+    config.parse_args()
     main()

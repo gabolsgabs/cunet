@@ -8,4 +8,6 @@ Tools for preprocessing the data:
 
 ###### 2. Compute the input indexes.
 
-It computes a file that contains the input index
+It computes an index file with all the indexes for the input datapoints
+
+> python -m cunet.preprocess.indexes        # check cunet/preprocess/config.py for the configuration

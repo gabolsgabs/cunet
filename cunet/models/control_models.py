@@ -2,7 +2,7 @@ from tensorflow.keras.layers import (
     Input, Conv1D, Dense, BatchNormalization, Dropout
 )
 import tensorflow as tf
-from cunet.models.config import config
+from cunet.config import config
 
 
 def dense_block(
