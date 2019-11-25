@@ -9,6 +9,9 @@ import random
 import logging
 
 
+logger = logging.getLogger('tensorflow')
+
+
 def check_shape(data):
     n = data.shape[0]
     if n % 2 != 0:
@@ -47,13 +50,14 @@ def progressive(data, conditions, dx):
 
 def load_files(files, val_files, val_set=False):
     data = {}
+    val_files = [i.decode("utf-8") for i in val_files]
     if not val_set:
         files = [i for i in files if get_name(i) not in val_files]
     else:
         files = [i for i in files if get_name(i) in val_files]
     sources = []
     for i in files:
-        logging.info('Loading the file %s' % i)
+        logger.info('Loading the file %s' % i)
         data_tmp = np.load(i, allow_pickle=True)
         if config.MODE == 'standard':
             data[get_name(i)] = np.empty(
@@ -75,7 +79,7 @@ def load_files(files, val_files, val_set=False):
             for j, value in enumerate(sources):
                 data[get_name(i)][:, :, j] = normlize_complex(data_tmp[value])
     if config.MODE == 'conditioned':
-        logging.info('Source order %s' % sources)
+        logger.info('Source order %s' % sources)
     return data, [get_name(i) for i in files]
 
 
@@ -90,17 +94,21 @@ def yield_data(indexes, data, files):
                    'conditions': conditions}
 
 
-def load_indexes_file(fl, val_files, val_set=False):
-    indexes = np.load(fl, allow_pickle=True)
+def load_indexes_file(val_files, val_set=False):
     data, files = load_files(
         glob(os.path.join(config_pre.PATH_SPEC, '*.npz')), val_files, val_set
     )
-    logging.info('Data loaded!')
+    logger.info('Data loaded!')
     print('Data loaded!')
     if not val_set:
+        indexes = np.load(os.path.join(config.PATH_BASE, config.INDEXES_TRAIN),
+                          allow_pickle=True)
         while True:
             return yield_data(indexes, data, files)
     else:
+        # Indexes val has no overlapp in the data points
+        indexes = np.load(os.path.join(config.PATH_BASE, config.INDEXES_VAL),
+                          allow_pickle=True)
         return yield_data(indexes, data, files)
 
 
@@ -156,7 +164,7 @@ def dataset_generator(val_files, val_set=False):
     ds = tf.data.Dataset.from_generator(
         load_indexes_file,
         {'data': tf.complex64, 'conditions': tf.float32},
-        args=[config.PATH_INDEXES, val_files, val_set]
+        args=[val_files, val_set]
     ).map(
         prepare_data, num_parallel_calls=config.NUM_THREADS
     ).map(

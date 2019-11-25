@@ -98,5 +98,5 @@ def cunet_model():
         )
     outputs = multiply([inputs, x])
     model = Model(inputs=[inputs, input_conditions], outputs=outputs)
-    model.compile(optimizer=Adam(lr=config.LR), loss=config.LOSS)
+    model.compile(optimizer=Adam(lr=config.LR, beta_1=0.5), loss=config.LOSS)
     return model

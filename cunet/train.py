@@ -1,11 +1,16 @@
 import logging
 import tensorflow as tf
-from cunet.callbacks import earlystopping, checkpoint
+from cunet.utilities import (
+    make_earlystopping, make_reduce_lr, make_tensorboard, make_checkpoint,
+    make_name, save_dir
+)
 from cunet.config import config as config
 from cunet.models.cunet_model import cunet_model
 from cunet.models.unet_model import unet_model
 from cunet.data_loader import dataset_generator
+from cunet.val_files import val_files
 import os
+
 
 logger = tf.get_logger()
 logger.setLevel(logging.INFO)
@@ -13,27 +18,38 @@ logger.setLevel(logging.INFO)
 
 def main():
     config.parse_args()
-    name = config.MODE
+    name = make_name()
+
+    logger.info('Starting the computation')
+
+    logger.info('Running training with config %s' % str(config))
+    logger.info('Getting the model')
     if config.MODE == 'standard':
         model = unet_model()
-        name = "_".join([name, config.TARGET])
     if config.MODE == 'conditioned':
         model = cunet_model()
-        name = "_".join([
-            name, config.CONTROL_TYPE, config.FILM_TYPE,
-            config.TRAIN_TYPE, str(config.CONDITION_MIX)
-        ])
-    train_ds = dataset_generator()
-    val_ds = dataset_generator()
-    model.fit_generator(
-        generator=train_ds,
+
+    logger.info('Preparing the genrators')
+    ds_train = dataset_generator(val_files)
+    ds_val = dataset_generator(val_files, val_set=True)
+
+    logger.info('Starting training for %s' % name)
+    model.fit(
+        ds_train,
+        validation_data=ds_val,
         steps_per_epoch=config.N_BATCH,
         epochs=config.N_EPOCH,
-        validation_data=val_ds,
-        workers=1,
-        use_multiprocessing=False,
-        callbacks=[earlystopping, checkpoint])
-    model.save(os.path.join(config.PATH_OUTPUT, name))
+        callbacks=[
+            make_earlystopping(),
+            make_reduce_lr(),
+            make_tensorboard(name),
+            make_checkpoint(name)
+        ])
+
+    logger.info('Saving model %' % name)
+    model.save(os.path.join((save_dir('models'), name+'.h5')))
+    logger.info('Done!')
+
     return
 
 

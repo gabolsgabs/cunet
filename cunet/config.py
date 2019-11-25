@@ -19,14 +19,18 @@ class config(Config):
     )
 
     PATH_BASE = '/data2/anasynth_nonbp/meseguerbrocal/source_separation/musdb18/'
-    PATH_OUTPUT = ''
-    PATH_LOG = ''
-    PATH_INDEXES = PATH_BASE + 'train/indexes/indexes_conditioned_1_4_1_True_True_1.0.npz'
-    NUM_THREADS = 1
+    INDEXES_TRAIN = 'train/indexes/indexes_standard_1_4.npz'
+    INDEXES_VAL = 'train/indexes/indexes_standard_128_4.npz'
+    NUM_THREADS = 4
+    EARLY_STOPPING_MIN_DELTA = 0.0
+    EARLY_STOPPING_PATIENCE = 15
+    REDUCE_PLATEAU_PATIENCE = 5
+    NAME = 'model'
 
     # training
-    BATCH_SIZE = 32
-    N_BATCH = 256
+    BATCH_SIZE = 64
+    N_BATCH = 512
+    N_EPOCH = 1000
     PROGRESSIVE = True
 
     # unet paramters

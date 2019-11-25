@@ -72,5 +72,5 @@ def unet_model():
         )
     outputs = multiply([inputs, x])
     model = Model(inputs, outputs)
-    model.compile(optimizer=Adam(lr=config.LR), loss=config.LOSS)
+    model.compile(optimizer=Adam(lr=config.LR, beta_1=0.5), loss=config.LOSS)
     return model
