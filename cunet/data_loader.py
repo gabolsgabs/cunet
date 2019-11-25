@@ -64,7 +64,7 @@ def load_files(files, val_files, val_set=False):
                 [*data_tmp['mix'].shape, 2], dtype=np.complex64
             )
             data[get_name(i)][:, :, 0] = normlize_complex(
-                data_tmp[config.TARGET])
+                data_tmp[config.SOURCE])
             data[get_name(i)][:, :, 1] = normlize_complex(
                 data_tmp['mix'])
         if config.MODE == 'conditioned':

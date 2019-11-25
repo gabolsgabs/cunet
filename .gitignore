@@ -1,5 +1,6 @@
 /cunet/models/old/
-/cunet/others.py
+/cunet/others/all_files.py
+/cunet/evaluation/visualizing.py
 
 *.DS_Store
 # Byte-compiled / optimized / DLL files

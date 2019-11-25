@@ -13,7 +13,7 @@ class config(Config):
         simple_cnn='conditioned', complex_cnn='conditioned'
     )
 
-    TARGET = setting(
+    SOURCE = setting(
         'vocals',   # only for standard version
         simple_dense='', complex_dense='', simple_cnn='', complex_cnn=''
     )
