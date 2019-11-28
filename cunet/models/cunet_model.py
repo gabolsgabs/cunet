@@ -9,41 +9,21 @@ from cunet.models.FiLM_utils import (
     FiLM_simple_layer, FiLM_complex_layer, slice_tensor, slice_tensor_range
 )
 from cunet.models.control_models import dense_control, cnn_control
+from cunet.models.unet_model import get_activation, u_net_deconv_block
 from cunet.config import config
 
 
-def get_activation(name):
-    if name == 'leaky_relu':
-        return LeakyReLU(alpha=0.2)
-    return tf.keras.activations.get(name)
-
-
 def u_net_conv_block(
-    x, n_filters, initializer, gamma, beta, activation, film_type
+    x, n_filters, initializer, gamma, beta, activation, film_type,
+    kernel_size=(5, 5), strides=(2, 2), padding='same'
 ):
-    x = Conv2D(n_filters, (5, 5),  padding='same', strides=(2, 2),
-               kernel_initializer=initializer)(x)
+    x = Conv2D(n_filters, kernel_size=kernel_size,  padding=padding,
+               strides=strides, kernel_initializer=initializer)(x)
     x = BatchNormalization(momentum=0.9, scale=True)(x)
     if film_type == 'simple':
         x = FiLM_simple_layer()([x, gamma, beta])
     if film_type == 'complex':
         x = FiLM_complex_layer()([x, gamma, beta])
-    x = get_activation(activation)(x)
-    return x
-
-
-def u_net_deconv_block(
-    x_decod, x_encod, n_filters, initializer, activation, dropout, skip
-):
-    x = x_encod
-    if skip:
-        x = Concatenate(axis=3)([x_decod, x])
-    x = Conv2DTranspose(
-        n_filters, 5, padding='same', strides=2,
-        kernel_initializer=initializer)(x)
-    x = BatchNormalization(momentum=0.9, scale=True)(x)
-    if dropout:
-        x = Dropout(0.5)(x)
     x = get_activation(activation)(x)
     return x
 

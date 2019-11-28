@@ -14,22 +14,26 @@ def get_activation(name):
     return tf.keras.activations.get(name)
 
 
-def u_net_conv_block(x, n_filters, initializer, activation):
-    x = Conv2D(n_filters, (5, 5),  padding='same', strides=(2, 2),
-               kernel_initializer=initializer)(x)
+def u_net_conv_block(
+    x, n_filters, initializer, activation, kernel_size=(5, 5), strides=(2, 2),
+    padding='same'
+):
+    x = Conv2D(n_filters, kernel_size=kernel_size,  padding=padding,
+               strides=strides, kernel_initializer=initializer)(x)
     x = BatchNormalization(momentum=0.9, scale=True)(x)
     x = get_activation(activation)(x)
     return x
 
 
 def u_net_deconv_block(
-    x_decod, x_encod, n_filters, initializer, activation, dropout, skip
+    x_decod, x_encod, n_filters, initializer, activation, dropout, skip,
+    kernel_size=(5, 5), strides=(2, 2), padding='same'
 ):
     x = x_encod
     if skip:
         x = Concatenate(axis=3)([x_decod, x])
     x = Conv2DTranspose(
-        n_filters, 5, padding='same', strides=2,
+        n_filters, kernel_size=kernel_size, padding=padding, strides=strides,
         kernel_initializer=initializer)(x)
     x = BatchNormalization(momentum=0.9, scale=True)(x)
     if dropout:

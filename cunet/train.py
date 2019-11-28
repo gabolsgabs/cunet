@@ -7,7 +7,7 @@ from cunet.utilities import (
 from cunet.config import config as config
 from cunet.models.cunet_model import cunet_model
 from cunet.models.unet_model import unet_model
-from cunet.data_loader import dataset_generator_train
+from cunet.data_loader import dataset_generator
 from cunet.others.val_files import val_files
 import os
 
@@ -33,7 +33,7 @@ def main():
         model = cunet_model()
 
     logger.info('Preparing the genrators')
-    ds_train = dataset_generator_train(val_files)
+    ds_train = dataset_generator(val_files)
     ds_val = dataset_generator(val_files, val_set=True)
 
     logger.info('Starting training for %s' % name)

@@ -32,13 +32,13 @@ def spec_mag(audio_file, norm=True):
     output = {}
     logger = logging.getLogger('computing_spec')
     try:
-        spec, error = spec_complex(audio_file)
+        spec = spec_complex(audio_file)
         spec = spec['spec']
         logger.info('Computing mag and phase for %s' % audio_file)
         # n_freq_bins -> connected with fft_size with 1024 -> 513 bins
         # the number of band is odd -> removing the last band
-        n = spec.shape[1] - 1
-        mag = np.abs(spec[:, :n])
+        n = spec.shape[0] - 1
+        mag = np.abs(spec[:n, :])
         #  mag = mag / np.max(mag)
         if norm:
             mx = np.max(mag)
@@ -58,9 +58,9 @@ def spec_mag_log(audio_file):
     output = {}
     logger = logging.getLogger('computing_spec')
     try:
-        tmp, error = spec_mag(audio_file, False)    # mag without norm
-        mag = tmp['magnitude']
-        output['phase'] = tmp['phase']
+        spec = spec_mag(audio_file, False)    # mag without norm
+        mag = spec['magnitude']
+        output['phase'] = spec['phase']
         spec_log = np.log1p(mag)
         mx = np.max(spec_log)
         mn = np.min(spec_log)
