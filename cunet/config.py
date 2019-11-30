@@ -14,8 +14,7 @@ class config(Config):
     )
 
     SOURCE = setting(
-        'vocals',   # only for standard version
-        simple_dense='', complex_dense='', simple_cnn='', complex_cnn=''
+        default='vocals',   # only for standard version
     )
 
     PATH_BASE = '/data2/anasynth_nonbp/meseguerbrocal/source_separation/musdb18/'

@@ -57,8 +57,10 @@ def make_checkpoint(name):
 
 def make_reduce_lr():
     return ReduceLROnPlateau(
-        monitor='val_loss', factor=0.5, patience=5, min_lr=0.0001, verbose=1
+        monitor='val_loss', factor=0.5, min_lr=0.0001, 
+        patience=config.REDUCE_PLATEAU_PATIENCE, verbose=1
     )
+
 
 
 def make_tensorboard(name):

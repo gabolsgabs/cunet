@@ -86,7 +86,8 @@ def load_files(files, val_files, val_set=False):
 def yield_data(indexes, data, files):
     conditions = np.zeros(1).astype(np.float32)
     n_frames = config.INPUT_SHAPE[1]
-    for i in indexes['indexes']:
+    for i in np.random.choice(
+            indexes['indexes'], len(indexes['indexes']), replace=False):
         if i[0] in files:
             if len(i) > 2:
                 conditions = i[2]
@@ -103,8 +104,8 @@ def load_indexes_file(val_files, val_set=False):
     if not val_set:
         indexes = np.load(os.path.join(config.PATH_BASE, config.INDEXES_TRAIN),
                           allow_pickle=True)
-        while True:
-            return yield_data(indexes, data, files)
+        # while True:
+        return yield_data(indexes, data, files)
     else:
         # Indexes val has no overlapp in the data points
         indexes = np.load(os.path.join(config.PATH_BASE, config.INDEXES_VAL),

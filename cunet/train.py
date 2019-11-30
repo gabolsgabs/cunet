@@ -49,8 +49,8 @@ def main():
             make_checkpoint(name)
         ])
 
-    logger.info('Saving model %' % name)
-    model.save(os.path.join((save_dir('models'), name+'.h5')))
+    logger.info('Saving model %s' % name)
+    model.save(os.path.join(save_dir('models'), name+'.h5'))
     logger.info('Done!')
 
     if gpu_id_locked >= 0:

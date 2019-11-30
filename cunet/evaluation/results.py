@@ -17,6 +17,7 @@ def istft(data, data_config):
 
 def reconstruct(pred_mag, orig_mix_phase, data_config):
     pred_mag = pred_mag[:, :orig_mix_phase.shape[1]]
+    # normalize by the max in the original mix?
     pred_spec = pred_mag * np.exp(1j * orig_mix_phase)
     return istft(pred_spec, data_config)
 
