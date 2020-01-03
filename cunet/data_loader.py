@@ -5,6 +5,7 @@ import os
 import tensorflow as tf
 from cunet.config import config
 from cunet.preprocess.config import config as config_pre
+from cunet.others.val_files import val_files
 import random
 import logging
 
@@ -83,11 +84,10 @@ def load_files(files, val_files, val_set=False):
     return data, [get_name(i) for i in files]
 
 
-def yield_data(indexes, data, files):
+def yield_data(indexes, data, files, val_set):
     conditions = np.zeros(1).astype(np.float32)
     n_frames = config.INPUT_SHAPE[1]
-    for i in np.random.choice(
-            indexes['indexes'], len(indexes['indexes']), replace=False):
+    for i in indexes:
         if i[0] in files:
             if len(i) > 2:
                 conditions = i[2]
@@ -103,14 +103,15 @@ def load_indexes_file(val_files, val_set=False):
     print('Data loaded!')
     if not val_set:
         indexes = np.load(os.path.join(config.PATH_BASE, config.INDEXES_TRAIN),
-                          allow_pickle=True)
-        # while True:
-        return yield_data(indexes, data, files)
+                          allow_pickle=True)['indexes']
+        r = list(range(len(indexes)))
+        random.shuffle(r)
+        indexes = indexes[r]
     else:
         # Indexes val has no overlapp in the data points
         indexes = np.load(os.path.join(config.PATH_BASE, config.INDEXES_VAL),
-                          allow_pickle=True)
-        return yield_data(indexes, data, files)
+                          allow_pickle=True)['indexes']
+    return yield_data(indexes, data, files, val_set)
 
 
 @tf.function(autograph=False)
@@ -158,10 +159,11 @@ def convert_to_estimator_input(d):
         # mixture + condition vector z
         inputs = (inputs, cond)
         # target -> isolate instrument
-    return (inputs, tf.ensure_shape(d["target"], config.INPUT_SHAPE))
+    outputs = tf.ensure_shape(d["target"], config.INPUT_SHAPE)
+    return (inputs, outputs)
 
 
-def dataset_generator(val_files, val_set=False):
+def dataset_generator(val_set=False):
     ds = tf.data.Dataset.from_generator(
         load_indexes_file,
         {'data': tf.complex64, 'conditions': tf.float32},
