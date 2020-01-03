@@ -24,7 +24,7 @@ def write_config(name):
 def save_dir(t):
     folder = os.path.join(config.PATH_BASE, t, config.MODE)
     if config.MODE == 'standard':
-        folder = os.path.join(folder, config.TARGET)
+        folder = os.path.join(folder, config.SOURCE)
     if config.MODE == 'conditioned':
         folder = os.path.join(
             folder, "_".join((config.CONTROL_TYPE, config.FILM_TYPE)))
@@ -33,8 +33,11 @@ def save_dir(t):
 
 
 def make_name():
-    now = datetime.now()
-    return "_".join((config.NAME, now.strftime("%d_%m_%Y_%H:%M")))
+    name = [config.NAME]
+    if config.ADD_TIME:
+        now = datetime.now()
+        name.append(now.strftime("%d_%m_%Y_%H:%M"))
+    return "_".join(name)
 
 
 def make_earlystopping():
@@ -57,7 +60,7 @@ def make_checkpoint(name):
 
 def make_reduce_lr():
     return ReduceLROnPlateau(
-        monitor='val_loss', factor=0.5, min_lr=0.0001, 
+        monitor='val_loss', factor=0.5, min_lr=0.0001,
         patience=config.REDUCE_PLATEAU_PATIENCE, verbose=1
     )
 

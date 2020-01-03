@@ -21,9 +21,9 @@ def u_net_conv_block(
                strides=strides, kernel_initializer=initializer)(x)
     x = BatchNormalization(momentum=0.9, scale=True)(x)
     if film_type == 'simple':
-        x = FiLM_simple_layer()([x, gamma, beta])
+        x = FiLM_simple_layer(gamma, beta)(x)
     if film_type == 'complex':
-        x = FiLM_complex_layer()([x, gamma, beta])
+        x = FiLM_complex_layer(gamma, beta)(x)
     x = get_activation(activation)(x)
     return x
 

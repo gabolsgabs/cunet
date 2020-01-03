@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from effortless_config import Config, setting
+import tensorflow as tf
 
 
 class config(Config):
@@ -16,15 +17,21 @@ class config(Config):
     SOURCE = setting(
         default='vocals',   # only for standard version
     )
+    NAME = 'model'
+    ADD_TIME = False
 
+    # GENERATOR
     PATH_BASE = '/data2/anasynth_nonbp/meseguerbrocal/source_separation/musdb18/'
     INDEXES_TRAIN = 'train/indexes/indexes_standard_1_4.npz'
     INDEXES_VAL = 'train/indexes/indexes_standard_128_4.npz'
-    NUM_THREADS = 4
+    NUM_THREADS = tf.data.experimental.AUTOTUNE
+    N_PREFETCH = tf.data.experimental.AUTOTUNE
+
+    # checkpoints
     EARLY_STOPPING_MIN_DELTA = 0.0
     EARLY_STOPPING_PATIENCE = 15
     REDUCE_PLATEAU_PATIENCE = 5
-    NAME = 'model'
+
 
     # training
     BATCH_SIZE = 64

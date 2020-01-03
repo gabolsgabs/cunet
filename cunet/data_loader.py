@@ -170,8 +170,11 @@ def dataset_generator(val_files, val_set=False):
         prepare_data, num_parallel_calls=config.NUM_THREADS
     ).map(
         convert_to_estimator_input, num_parallel_calls=config.NUM_THREADS
+    ).batch(
+        config.BATCH_SIZE, drop_remainder=True
+    ).prefetch(
+        buffer_size=config.N_PREFETCH
     )
-    ds = ds.batch(config.BATCH_SIZE, drop_remainder=True)
     if not val_set:
         ds = ds.repeat()
     return ds

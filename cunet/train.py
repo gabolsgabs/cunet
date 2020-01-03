@@ -1,8 +1,8 @@
 import logging
 import tensorflow as tf
-from cunet.utilities import (
+from cunet.others.utilities import (
     make_earlystopping, make_reduce_lr, make_tensorboard, make_checkpoint,
-    make_name, save_dir
+    make_name, save_dir, write_config
 )
 from cunet.config import config as config
 from cunet.models.cunet_model import cunet_model
@@ -22,6 +22,7 @@ logger.setLevel(logging.INFO)
 def main():
     config.parse_args()
     name = make_name()
+    write_config(name)
     gpu_id_locked = get_lock()
     logger.info('Starting the computation')
 

@@ -3,10 +3,9 @@ from tensorflow.keras.layers import Lambda
 from tensorflow.keras import backend as K
 
 
-def FiLM_simple_layer():
-    def func(args):
+def FiLM_simple_layer(gamma, beta):
+    def func(x):
         """multiply scalar to a tensor"""
-        x, gamma, beta = args
         s = list(K.int_shape(x))
         s[0] = 1
         # avoid tile with the num of batch -> it is the same for both tensors
@@ -16,10 +15,9 @@ def FiLM_simple_layer():
     return Lambda(func)
 
 
-def FiLM_complex_layer():
+def FiLM_complex_layer(gamma, beta):
     """multiply tensor to tensor"""
-    def func(args):
-        x, gamma, beta = args
+    def func(x):
         s = list(K.int_shape(x))
         # avoid tile with the num of batch -> same for both tensors
         s[0] = 1
