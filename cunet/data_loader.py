@@ -127,14 +127,12 @@ def prepare_data(data):
                 # simple conditions
                 if len(i) == 1:
                     target, conditions = progressive(
-                        target_complex, conditions, i[0]
-                    )
+                        target_complex, conditions, i[0])
                 # complex conditions
                 if len(i) > 1:
                     for dx in i:
                         target_tmp, conditions = progressive(
-                            target_complex, conditions, dx
-                        )
+                            target_complex, conditions, dx)
                         target = np.sum([target, target_tmp], axis=0)
             target = np.abs(target)*np.max(conditions)
         mixture = np.abs(target_complex[:, :, -1])

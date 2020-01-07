@@ -1,8 +1,7 @@
 import tensorflow as tf
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import (
-    Input, Conv2D, Conv2DTranspose, multiply,
-    BatchNormalization, LeakyReLU, Dropout, Concatenate
+    Input, Conv2D, multiply, BatchNormalization
 )
 from tensorflow.keras.optimizers import Adam
 from cunet.models.FiLM_utils import (
@@ -78,5 +77,7 @@ def cunet_model():
         )
     outputs = multiply([inputs, x])
     model = Model(inputs=[inputs, input_conditions], outputs=outputs)
-    model.compile(optimizer=Adam(lr=config.LR, beta_1=0.5), loss=config.LOSS)
+    model.compile(
+        optimizer=Adam(lr=config.LR, beta_1=0.5), loss=config.LOSS,
+        experimental_run_tf_function=False)
     return model
