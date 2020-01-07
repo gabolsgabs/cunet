@@ -12,22 +12,21 @@ def create_folder(folder):
     return
 
 
-def write_config(name):
-    folder = os.path.join(save_dir('logs'), name)
-    create_folder(folder)
+def write_config(folder):
     fl = open(os.path.join(folder, 'config.txt'), 'w')
     fl.write(str(config))
     fl.close()
     return
 
 
-def save_dir(t):
+def save_dir(t, name):
     folder = os.path.join(config.PATH_BASE, t, config.MODE)
     if config.MODE == 'standard':
         folder = os.path.join(folder, config.SOURCE)
     if config.MODE == 'conditioned':
         folder = os.path.join(
             folder, "_".join((config.CONTROL_TYPE, config.FILM_TYPE)))
+    folder = os.path.join(folder, name)
     create_folder(folder)
     return folder
 
@@ -48,11 +47,11 @@ def make_earlystopping():
     )
 
 
-def make_checkpoint(name):
-    folder = os.path.join(save_dir('checkpoint'), name)
+def make_checkpoint(folder):
+    folder = os.path.join(folder, 'checkpoint')
     create_folder(folder)
     return ModelCheckpoint(
-        filepath=os.path.join(folder, 'model_{epoch:02d}-{val_loss:.5f}'),
+        filepath=os.path.join(folder, 'ckpt_{epoch:02d}-{val_loss:.5f}'),
         verbose=1, mode='min', save_best_only=True, save_weights_only=True,
         monitor='val_loss'
     )
@@ -65,9 +64,8 @@ def make_reduce_lr():
     )
 
 
-
-def make_tensorboard(name):
-    folder = os.path.join(save_dir('tensorboard'), name)
+def make_tensorboard(folder):
+    folder = os.path.join(folder, 'tensorboard')
     create_folder(folder)
     return TensorBoard(log_dir=folder, write_graph=True)
 

@@ -133,7 +133,7 @@ def get_stats(dict, stat):
     return r
 
 
-def main(orig_label, params):
+def main():
     logging.basicConfig(
         filename=os.path.join(config.PATH_RESULTS, 'computing_spec.log'),
         level=logging.INFO

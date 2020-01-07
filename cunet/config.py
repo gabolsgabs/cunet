@@ -35,7 +35,7 @@ class config(Config):
 
     # training
     BATCH_SIZE = 64
-    N_BATCH = 512
+    N_BATCH = 1024
     N_EPOCH = 1000
     PROGRESSIVE = True
 
@@ -43,7 +43,7 @@ class config(Config):
     INPUT_SHAPE = [512, 128, 1]  # freq = 512, time = 128
     FILTERS_LAYER_1 = 16
     N_LAYERS = 6
-    LR = 0.001
+    LR = 1e-4
     ACTIVATION_ENCODER = 'leaky_relu'
     ACTIVATION_DECODER = 'relu'
     ACT_LAST = 'sigmoid'

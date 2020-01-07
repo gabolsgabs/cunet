@@ -21,7 +21,8 @@ logger.setLevel(logging.INFO)
 def main():
     config.parse_args()
     name = make_name()
-    write_config(name)
+    save_path = save_dir('models', name)
+    write_config(save_path)
     gpu_id_locked = get_lock()
     logger.info('Starting the computation')
 
@@ -45,12 +46,12 @@ def main():
         callbacks=[
             make_earlystopping(),
             make_reduce_lr(),
-            make_tensorboard(name),
-            make_checkpoint(name)
+            make_tensorboard(save_path),
+            make_checkpoint(save_path)
         ])
 
     logger.info('Saving model %s' % name)
-    model.save(os.path.join(save_dir('models'), name+'.h5'))
+    model.save(os.path.join(save_path, name+'_final.h5'))
     logger.info('Done!')
 
     if gpu_id_locked >= 0:

@@ -51,7 +51,6 @@ def progressive(data, conditions, dx):
 
 def load_files(files, val_files, val_set=False):
     data = {}
-    val_files = [i.decode("utf-8") for i in val_files]
     if not val_set:
         files = [i for i in files if get_name(i) not in val_files]
     else:
@@ -84,7 +83,7 @@ def load_files(files, val_files, val_set=False):
     return data, [get_name(i) for i in files]
 
 
-def yield_data(indexes, data, files, val_set):
+def yield_data(indexes, data, files):
     conditions = np.zeros(1).astype(np.float32)
     n_frames = config.INPUT_SHAPE[1]
     for i in indexes:
@@ -95,7 +94,7 @@ def yield_data(indexes, data, files, val_set):
                    'conditions': conditions}
 
 
-def load_indexes_file(val_files, val_set=False):
+def load_indexes_file(val_set=False):
     data, files = load_files(
         glob(os.path.join(config_pre.PATH_SPEC, '*.npz')), val_files, val_set
     )
@@ -111,7 +110,7 @@ def load_indexes_file(val_files, val_set=False):
         # Indexes val has no overlapp in the data points
         indexes = np.load(os.path.join(config.PATH_BASE, config.INDEXES_VAL),
                           allow_pickle=True)['indexes']
-    return yield_data(indexes, data, files, val_set)
+    return yield_data(indexes, data, files)
 
 
 @tf.function(autograph=False)
@@ -166,8 +165,7 @@ def convert_to_estimator_input(d):
 def dataset_generator(val_set=False):
     ds = tf.data.Dataset.from_generator(
         load_indexes_file,
-        {'data': tf.complex64, 'conditions': tf.float32},
-        args=[val_files, val_set]
+        {'data': tf.complex64, 'conditions': tf.float32}, args=[val_set]
     ).map(
         prepare_data, num_parallel_calls=config.NUM_THREADS
     ).map(
