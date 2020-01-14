@@ -6,9 +6,9 @@ from tensorflow.keras import backend as K
 def FiLM_simple_layer(gamma, beta):
     def func(x):
         """multiply scalar to a tensor"""
-        s = list(K.int_shape(x))
+        s = list(x.shape)
         s[0] = 1
-        # avoid tile with the num of batch -> it is the same for both tensors
+        # # avoid tile with the num of batch -> it is the same for both tensors
         g = tf.tile(tf.expand_dims(tf.expand_dims(gamma, 2), 3), s)
         b = tf.tile(tf.expand_dims(tf.expand_dims(beta, 2), 3), s)
         return tf.add(b, tf.multiply(x, g))
@@ -18,7 +18,7 @@ def FiLM_simple_layer(gamma, beta):
 def FiLM_complex_layer(gamma, beta):
     """multiply tensor to tensor"""
     def func(x):
-        s = list(K.int_shape(x))
+        s = list(x.shape)
         # avoid tile with the num of batch -> same for both tensors
         s[0] = 1
         # avoid tile with the num of channels -> same for both tensors

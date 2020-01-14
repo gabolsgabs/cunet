@@ -51,7 +51,7 @@ def main():
         ])
 
     logger.info('Saving model %s' % name)
-    model.save(os.path.join(save_path, name+'_final.h5'))
+    model.save_weights(os.path.join(save_path, name+'_final.h5'))
     logger.info('Done!')
 
     if gpu_id_locked >= 0:

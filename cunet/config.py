@@ -17,21 +17,22 @@ class config(Config):
     SOURCE = setting(
         default='vocals',   # only for standard version
     )
-    NAME = 'model'
+    NAME = 'test'
     ADD_TIME = False
 
     # GENERATOR
     PATH_BASE = '/data2/anasynth_nonbp/meseguerbrocal/source_separation/musdb18/'
-    INDEXES_TRAIN = 'train/indexes/indexes_standard_1_4.npz'
-    INDEXES_VAL = 'train/indexes/indexes_standard_128_4.npz'
-    NUM_THREADS = tf.data.experimental.AUTOTUNE
-    N_PREFETCH = tf.data.experimental.AUTOTUNE
+    # INDEXES_TRAIN = 'train/indexes/indexes_standard_1_4.npz'
+    INDEXES_TRAIN = 'train/indexes/indexes_conditioned_1_4_1_True_True_1.0.npz'
+    # INDEXES_VAL = 'train/indexes/indexes_standard_128_4.npz'
+    INDEXES_VAL = 'train/indexes/indexes_conditioned_128_4_1_True_True_1.0.npz'
+    NUM_THREADS = tf.data.experimental.AUTOTUNE   #
+    N_PREFETCH = 2048  # tf.data.experimental.AUTOTUNE
 
     # checkpoints
     EARLY_STOPPING_MIN_DELTA = 0.0
     EARLY_STOPPING_PATIENCE = 15
     REDUCE_PLATEAU_PATIENCE = 5
-
 
     # training
     BATCH_SIZE = 64
