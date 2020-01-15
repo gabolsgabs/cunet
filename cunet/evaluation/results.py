@@ -78,20 +78,23 @@ def concatenate(data, shape):
     return output
 
 
-def analize_spec(orig_mix_spec, model, data_config):
+def analize_spec(orig_mix_spec, model, data_config, target_source):
     logger = logging.getLogger('computing_spec')
     pred_audio = np.array([])
     orig_mix_spec = normlize_complex(orig_mix_spec)
     orig_mix_mag = np.abs(orig_mix_spec)
     orig_mix_phase = np.angle(orig_mix_spec)
+    pred_audio, pred_mag = None, None
     try:
-        num_bands, num_frames = model.input_shape[1:3]
-        x = prepare_a_song(orig_mix_mag, num_frames, num_bands)
         if config.MODE == 'standard':
+            num_bands, num_frames = model.input_shape[1:3]
+            x = prepare_a_song(orig_mix_mag, num_frames, num_bands)
             pred_mag = model.predict(x)
         if config.MODE == 'conditioned':
+            num_bands, num_frames = model.input_shape[0][1:3]
+            x = prepare_a_song(orig_mix_mag, num_frames, num_bands)
             cond = np.zeros(len(config.INSTRUMENTS))
-            for i in config.SOURCE:
+            for i in target_source.split('_'):
                 cond[config.INSTRUMENTS.index(i)] = 1.
             if config.EMB_TYPE == 'dense':
                 cond = cond.reshape(1, -1)
@@ -124,7 +127,8 @@ def do_an_exp(audio, target_source, model):
     # accompaniment (sum of all apart from the original)
     acc = istft(accompaniment, audio['config'])
     # predicted separation
-    pred_audio, pred_mag = analize_spec(audio['mix'], model, audio['config'])
+    pred_audio, pred_mag = analize_spec(
+        audio['mix'], model, audio['config'], target_source)
     # to go back to the range of values of the original target
     pred_audio = adapt_pred(pred_audio, target)
     # size
@@ -155,29 +159,45 @@ def create_pandas(files):
     return df
 
 
+def load_a_cunet():
+    model = None
+    if config.MODE == 'standard':
+        model = load_model(config.PATH_MODEL)
+    else:
+        import tensorflow as tf
+        model = load_model(config.PATH_MODEL,  custom_objects={"tf": tf})
+        # from cunet.config import config as config_model
+        # from cunet.models.cunet_model import cunet_model
+        # config_model.set_group(config.PATH_MODEL.split('/')[-3])
+        # model = cunet_model()
+        # model.load_weights(config.PATH_MODEL)
+    return model
+
+
 def main():
     logging.basicConfig(
-        filename=os.path.join(config.PATH_RESULTS, 'computing_spec.log'),
+        filename=os.path.join(config.PATH_RESULTS, 'results.log'),
         level=logging.INFO)
     logger = logging.getLogger('computing_spec')
     logger.info('Starting the computation')
     files = glob(os.path.join(config.PATH_AUDIO, '*.npz'))
-    model = load_model(config.PATH_MODEL)
-    # model = load_model(path_model, custom_objects={"tf": tf})
     results = create_pandas(files)
+    model = load_a_cunet()
     count = 0
     for i, fl in enumerate(files):
         name = os.path.basename(os.path.normpath(fl)).replace('.npz', '')
         audio = np.load(fl, allow_pickle=True)
+        logger.info('Song num: ' + str(i+1) + ' out of ' + str(len(files)))
         for target in config.TARGET:
             results.at[count, 'name'] = name
             results.at[count, 'target'] = target
             logger.info('Analyzing ' + name + ' for target ' + target)
-            logger.info('Song num: ' + str(i+1) + ' out of ' + str(len(files)))
             (results.at[count, 'sdr'], results.at[count, 'sir'],
              results.at[count, 'sar']) = do_an_exp(audio, target, model)
             logger.info(results.iloc[count])
             count += 1
+    name = "_".join(config.TARGET + ['results.pkl'])
+    results.to_pickle(os.path.join(config.PATH_RESULTS, name))
     return
 
 

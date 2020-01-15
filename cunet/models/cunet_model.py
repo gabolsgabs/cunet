@@ -20,9 +20,9 @@ def u_net_conv_block(
                strides=strides, kernel_initializer=initializer)(x)
     x = BatchNormalization(momentum=0.9, scale=True)(x)
     if film_type == 'simple':
-        x = FiLM_simple_layer(gamma, beta)(x)
+        x = FiLM_simple_layer()([x, gamma, beta])
     if film_type == 'complex':
-        x = FiLM_complex_layer(gamma, beta)(x)
+        x = FiLM_complex_layer()([x, gamma, beta])
     x = get_activation(activation)(x)
     return x
 
@@ -78,6 +78,6 @@ def cunet_model():
     outputs = multiply([inputs, x])
     model = Model(inputs=[inputs, input_conditions], outputs=outputs)
     model.compile(
-        optimizer=Adam(lr=config.LR, beta_1=0.5), loss=config.LOSS,
-        experimental_run_tf_function=False)
+        optimizer=Adam(lr=config.LR, beta_1=0.5), loss=config.LOSS)
+        # experimental_run_tf_function=False)
     return model

@@ -4,7 +4,7 @@ from cunet.others.utilities import (
     make_earlystopping, make_reduce_lr, make_tensorboard, make_checkpoint,
     make_name, save_dir, write_config
 )
-from cunet.config import config as config
+from cunet.config import config
 from cunet.models.cunet_model import cunet_model
 from cunet.models.unet_model import unet_model
 from cunet.data_loader import dataset_generator
@@ -51,8 +51,9 @@ def main():
         ])
 
     logger.info('Saving model %s' % name)
-    model.save_weights(os.path.join(save_path, name+'_final.h5'))
+    model.save(os.path.join(save_path, name+'_final.h5'))
     logger.info('Done!')
+    model.summary()
 
     if gpu_id_locked >= 0:
         gpl.free_lock(gpu_id_locked)
