@@ -1,16 +1,16 @@
 import logging
 import tensorflow as tf
-from cunet.others.utilities import (
+from cunet.train.others.utilities import (
     make_earlystopping, make_reduce_lr, make_tensorboard, make_checkpoint,
     make_name, save_dir, write_config
 )
-from cunet.config import config
-from cunet.models.cunet_model import cunet_model
-from cunet.models.unet_model import unet_model
-from cunet.data_loader import dataset_generator
+from cunet.train.config import config
+from cunet.train.models.cunet_model import cunet_model
+from cunet.train.models.unet_model import unet_model
+from cunet.train.data_loader import dataset_generator
 import os
 
-from cunet.others.lock import get_lock
+from cunet.train.others.lock import get_lock
 import manage_gpus as gpl
 
 
@@ -32,6 +32,13 @@ def main():
         model = unet_model()
     if config.MODE == 'conditioned':
         model = cunet_model()
+    latest = tf.train.latest_checkpoint(
+        os.path.join(save_path, 'checkpoint'))
+    if latest:
+        model.load_weights(latest)
+        logger.info("Restored from {}".format(latest))
+    else:
+        logger.info("Initializing from scratch.")
 
     logger.info('Preparing the genrators')
     ds_train = dataset_generator()

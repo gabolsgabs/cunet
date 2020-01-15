@@ -5,7 +5,7 @@ from tensorflow.keras.layers import (
     BatchNormalization, LeakyReLU, Dropout, Concatenate
 )
 from tensorflow.keras.optimizers import Adam
-from cunet.config import config
+from cunet.train.config import config
 
 
 def get_activation(name):

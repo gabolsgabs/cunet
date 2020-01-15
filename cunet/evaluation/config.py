@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from effortless_config import Config, setting
+from effortless_config import Config
 
 
 class config(Config):

@@ -2,7 +2,7 @@ from datetime import datetime
 from tensorflow.keras.callbacks import (
     ModelCheckpoint, EarlyStopping, TensorBoard, ReduceLROnPlateau
 )
-from cunet.config import config
+from cunet.train.config import config
 import os
 
 

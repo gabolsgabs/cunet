@@ -1,7 +1,57 @@
 # Conditioned-U-Net for multitask musical instrument source separations
 
 
-**NOTE:** the code is being porting to tf 2.0. Currently, only the model architectures are available. The whole pipeline and some audio examples will be available soon.
+## How to use this package:
+
+Three different modules. Each one perform a different step of the process. Look the different README to learn how to use it.
+
+  ```
+  └── cunet
+      ├── __init__.py
+      ├── evaluation
+      ├── preprocess
+      └── train
+  ```
+  - Prepare the input data at: code/preprocess
+
+  ```
+  └── preprocess
+      ├── README.md
+      ├── __init__.py
+      ├── config.py
+      ├── indexes.py
+      └── spectrogram.py
+  ```
+
+  - Train a new model at: code/train
+  ```
+  └── train
+      ├── README.md
+      ├── __init__.py
+      ├── config.py
+      ├── data_loader.py
+      ├── main.py
+      ├── models
+      │   ├── FiLM_utils.py
+      │   ├── __init__.py
+      │   ├── control_models.py
+      │   ├── cunet_model.py
+      │   └── unet_model.py
+      └── others
+          ├── __init__.py
+          ├── lock.py
+          ├── utilities.py
+          └── val_files.py
+  ```
+  - Evaluate a model at: code/evaluation
+
+    ```
+    └── evaluation
+        ├── README.md
+        ├── __init__.py
+        ├── config.py
+        └── results.py
+    ```
 
 
 ## Overview:

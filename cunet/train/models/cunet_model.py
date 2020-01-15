@@ -4,12 +4,12 @@ from tensorflow.keras.layers import (
     Input, Conv2D, multiply, BatchNormalization
 )
 from tensorflow.keras.optimizers import Adam
-from cunet.models.FiLM_utils import (
+from cunet.train.models.FiLM_utils import (
     FiLM_simple_layer, FiLM_complex_layer, slice_tensor, slice_tensor_range
 )
-from cunet.models.control_models import dense_control, cnn_control
-from cunet.models.unet_model import get_activation, u_net_deconv_block
-from cunet.config import config
+from cunet.train.models.control_models import dense_control, cnn_control
+from cunet.train.models.unet_model import get_activation, u_net_deconv_block
+from cunet.train.config import config
 
 
 def u_net_conv_block(

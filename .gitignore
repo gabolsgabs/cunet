@@ -1,5 +1,5 @@
-/cunet/models/old/
-/cunet/others/all_files.py
+/cunet/train/models/old/
+/cunet/train/others/all_files.py
 /cunet/evaluation/visualizing.py
 
 *.DS_Store

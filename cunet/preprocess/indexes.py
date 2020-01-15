@@ -3,7 +3,7 @@ import copy
 import itertools
 import os
 from cunet.preprocess.config import config
-from cunet.config import config as config_general
+from cunet.train.config import config as config_train
 from glob import glob
 import logging
 
@@ -93,7 +93,7 @@ def main():
     )
     logger = logging.getLogger('getting_indexes')
     logger.info('Starting the computation')
-    freq_r, time_r = config_general.INPUT_SHAPE[:2]
+    freq_r, time_r = config_train.INPUT_SHAPE[:2]
     conditions = []
     name = "_".join([
         'indexes', config.MODE, str(config.STEP), str(config.CHUNK_SIZE)

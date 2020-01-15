@@ -3,9 +3,9 @@ from glob import glob
 import numpy as np
 import os
 import tensorflow as tf
-from cunet.config import config
+from cunet.train.config import config
 from cunet.preprocess.config import config as config_pre
-from cunet.others.val_files import val_files
+from cunet.train.others.val_files import val_files
 import random
 import logging
 

@@ -26,8 +26,8 @@ class config(Config):
     INDEXES_TRAIN = 'train/indexes/indexes_conditioned_1_4_1_True_True_1.0.npz'
     # INDEXES_VAL = 'train/indexes/indexes_standard_128_4.npz'
     INDEXES_VAL = 'train/indexes/indexes_conditioned_128_4_1_True_True_1.0.npz'
-    NUM_THREADS = tf.data.experimental.AUTOTUNE   #
-    N_PREFETCH = 2048  # tf.data.experimental.AUTOTUNE
+    NUM_THREADS = tf.data.experimental.AUTOTUNE   # 32
+    N_PREFETCH = tf.data.experimental.AUTOTUNE  # 4096
 
     # checkpoints
     EARLY_STOPPING_MIN_DELTA = 0.0

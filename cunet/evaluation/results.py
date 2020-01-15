@@ -7,7 +7,7 @@ import os
 import logging
 import pandas as pd
 from cunet.evaluation.config import config
-from cunet.data_loader import normlize_complex
+from cunet.train.data_loader import normlize_complex
 from cunet.preprocess.spectrogram import spec_complex
 
 
