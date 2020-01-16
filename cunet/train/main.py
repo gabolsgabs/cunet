@@ -7,7 +7,6 @@ from cunet.train.others.utilities import (
 from cunet.train.config import config
 from cunet.train.models.cunet_model import cunet_model
 from cunet.train.models.unet_model import unet_model
-from cunet.train.data_loader import dataset_generator
 import os
 
 from cunet.train.others.lock import get_lock
@@ -41,6 +40,8 @@ def main():
         logger.info("Initializing from scratch.")
 
     logger.info('Preparing the genrators')
+    # Here to be sure that has the same config
+    from cunet.train.data_loader import dataset_generator
     ds_train = dataset_generator()
     ds_val = dataset_generator(val_set=True)
 

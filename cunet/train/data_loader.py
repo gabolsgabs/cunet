@@ -1,10 +1,9 @@
 import copy
-from glob import glob
 import numpy as np
 import os
 import tensorflow as tf
 from cunet.train.config import config
-from cunet.preprocess.config import config as config_pre
+from cunet.train.load_data_offline import DATA
 from cunet.train.others.val_files import VAL_FILES
 import random
 import logging
@@ -49,66 +48,29 @@ def progressive(data, conditions, dx):
     return output, conditions
 
 
-def load_files(files, val_files=VAL_FILES, val_set=False):
-    data = {}
-    if not val_set:
-        files = [i for i in files if get_name(i) not in val_files]
-    else:
-        files = [i for i in files if get_name(i) in val_files]
-    sources = []
-    for i in files:
-        logger.info('Loading the file %s' % i)
-        data_tmp = np.load(i, allow_pickle=True)
-        if config.MODE == 'standard':
-            data[get_name(i)] = np.empty(
-                [*data_tmp['mix'].shape, 2], dtype=np.complex64
-            )
-            data[get_name(i)][:, :, 0] = normlize_complex(
-                data_tmp[config.TARGET])
-            data[get_name(i)][:, :, 1] = normlize_complex(
-                data_tmp['mix'])
-        if config.MODE == 'conditioned':
-            if len(sources) == 0:
-                sources = copy.deepcopy(data_tmp.files)
-                sources.remove('config')
-                # to be sure that the mix is the last element
-                sources.insert(len(sources), sources.pop(sources.index('mix')))
-            data[get_name(i)] = np.empty(
-                [*data_tmp['mix'].shape, len(sources)], dtype=np.complex64
-            )
-            for j, value in enumerate(sources):
-                data[get_name(i)][:, :, j] = normlize_complex(data_tmp[value])
-    if config.MODE == 'conditioned':
-        logger.info('Source order %s' % sources)
-    return data, [get_name(i) for i in files]
-
-
-def yield_data(indexes, data, files):
+def yield_data(indexes, files):
     conditions = np.zeros(1).astype(np.float32)
     n_frames = config.INPUT_SHAPE[1]
     for i in indexes:
         if i[0] in files:
             if len(i) > 2:
                 conditions = i[2]
-            yield {'data': data[i[0]][:, i[1]:i[1]+n_frames, :],
+            yield {'data': DATA[i[0]][:, i[1]:i[1]+n_frames, :],
                    'conditions': conditions}
 
 
 def load_indexes_file(val_set=False):
-    data, files = load_files(
-        glob(os.path.join(config_pre.PATH_SPEC, '*.npz')), val_set=val_set
-    )
-    logger.info('Data loaded!')
-    print('Data loaded!')
     if not val_set:
         indexes = np.load(config.INDEXES_TRAIN, allow_pickle=True)['indexes']
         r = list(range(len(indexes)))
         random.shuffle(r)
         indexes = indexes[r]
+        files = [i for i in DATA.keys() if i is not VAL_FILES]
     else:
         # Indexes val has no overlapp in the data points
         indexes = np.load(config.INDEXES_VAL, allow_pickle=True)['indexes']
-    return yield_data(indexes, data, files)
+        files = VAL_FILES
+    return yield_data(indexes, files)
 
 
 @tf.function(autograph=False)
@@ -163,7 +125,8 @@ def convert_to_estimator_input(d):
 def dataset_generator(val_set=False):
     ds = tf.data.Dataset.from_generator(
         load_indexes_file,
-        {'data': tf.complex64, 'conditions': tf.float32}, args=[val_set]
+        {'data': tf.complex64, 'conditions': tf.float32},
+        args=[val_set]
     ).map(
         prepare_data, num_parallel_calls=config.NUM_THREADS
     ).map(
