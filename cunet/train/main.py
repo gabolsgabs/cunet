@@ -58,9 +58,8 @@ def main():
         ])
 
     logger.info('Saving model %s' % name)
-    model.save(os.path.join(save_path, name+'_final.h5'))
+    model.save(os.path.join(save_path, name+'.h5'))
     logger.info('Done!')
-    model.summary()
 
     if gpu_id_locked >= 0:
         gpl.free_lock(gpu_id_locked)

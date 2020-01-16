@@ -1,6 +1,7 @@
 /cunet/train/models/old/
 /cunet/train/others/all_files.py
 /cunet/evaluation/visualizing.py
+/vunet
 
 *.DS_Store
 # Byte-compiled / optimized / DLL files

@@ -22,7 +22,7 @@ def write_config(folder):
 def save_dir(t, name):
     folder = os.path.join(config.PATH_BASE, t, config.MODE)
     if config.MODE == 'standard':
-        folder = os.path.join(folder, config.SOURCE)
+        folder = os.path.join(folder, config.TARGET)
     if config.MODE == 'conditioned':
         folder = os.path.join(
             folder, "_".join((config.FILM_TYPE, config.CONTROL_TYPE)))

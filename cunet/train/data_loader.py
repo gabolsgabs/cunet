@@ -5,7 +5,7 @@ import os
 import tensorflow as tf
 from cunet.train.config import config
 from cunet.preprocess.config import config as config_pre
-from cunet.train.others.val_files import val_files
+from cunet.train.others.val_files import VAL_FILES
 import random
 import logging
 
@@ -40,8 +40,8 @@ def normlize_complex(data):
 def progressive(data, conditions, dx):
     output = copy.deepcopy(data)
     if (
-        config.PROGRESSIVE and np.abs(complex_max(data)) > 0
-        and np.sum((np.random.randint(4, size=1))) == 0   # 25% of doing it
+        config.PROGRESSIVE and np.max(np.abs(data)) > 0
+        and random.sample(range(0, 4), 1)[0] == 0   # 25% of doing it
     ):
         p = random.uniform(0, 1)
         conditions[dx] = conditions[dx]*p
@@ -49,7 +49,7 @@ def progressive(data, conditions, dx):
     return output, conditions
 
 
-def load_files(files, val_files, val_set=False):
+def load_files(files, val_files=VAL_FILES, val_set=False):
     data = {}
     if not val_set:
         files = [i for i in files if get_name(i) not in val_files]
@@ -64,7 +64,7 @@ def load_files(files, val_files, val_set=False):
                 [*data_tmp['mix'].shape, 2], dtype=np.complex64
             )
             data[get_name(i)][:, :, 0] = normlize_complex(
-                data_tmp[config.SOURCE])
+                data_tmp[config.TARGET])
             data[get_name(i)][:, :, 1] = normlize_complex(
                 data_tmp['mix'])
         if config.MODE == 'conditioned':
@@ -96,20 +96,18 @@ def yield_data(indexes, data, files):
 
 def load_indexes_file(val_set=False):
     data, files = load_files(
-        glob(os.path.join(config_pre.PATH_SPEC, '*.npz')), val_files, val_set
+        glob(os.path.join(config_pre.PATH_SPEC, '*.npz')), val_set=val_set
     )
     logger.info('Data loaded!')
     print('Data loaded!')
     if not val_set:
-        indexes = np.load(os.path.join(config.PATH_BASE, config.INDEXES_TRAIN),
-                          allow_pickle=True)['indexes']
+        indexes = np.load(config.INDEXES_TRAIN, allow_pickle=True)['indexes']
         r = list(range(len(indexes)))
         random.shuffle(r)
         indexes = indexes[r]
     else:
         # Indexes val has no overlapp in the data points
-        indexes = np.load(os.path.join(config.PATH_BASE, config.INDEXES_VAL),
-                          allow_pickle=True)['indexes']
+        indexes = np.load(config.INDEXES_VAL, allow_pickle=True)['indexes']
     return yield_data(indexes, data, files)
 
 
@@ -119,7 +117,8 @@ def prepare_data(data):
         target_complex = target_complex.numpy()
         conditions = conditions.numpy()
         if config.MODE == 'standard':
-            target = np.abs(target_complex[:, :, 0])
+            # the instrument is already selected and normalized in load_files
+            target = np.abs(target_complex[:, :, 0])    # thus target in 0
         if config.MODE == 'conditioned':
             i = np.nonzero(conditions)[0]
             target = np.zeros(target_complex.shape[:2]).astype(np.complex64)
@@ -134,7 +133,8 @@ def prepare_data(data):
                         target_tmp, conditions = progressive(
                             target_complex, conditions, dx)
                         target = np.sum([target, target_tmp], axis=0)
-            target = np.abs(target)*np.max(conditions)
+            if np.max(conditions) != 1:
+                target = np.abs(target)*np.max(conditions)
         mixture = np.abs(target_complex[:, :, -1])
         return check_shape(mixture), check_shape(target), conditions
     mixture, target, conditions = tf.py_function(

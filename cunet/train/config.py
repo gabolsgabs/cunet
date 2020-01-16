@@ -1,31 +1,37 @@
 # -*- coding: utf-8 -*-
 from effortless_config import Config, setting
 import tensorflow as tf
+import os
 
 
 class config(Config):
 
-    groups = ['simple_dense', 'complex_dense', 'simple_cnn', 'complex_cnn']
+    groups = ['standard', 'simple_dense', 'complex_dense', 'simple_cnn',
+              'complex_cnn']
     # General
 
-    MODE = setting(
-        'standard',
-        simple_dense='conditioned', complex_dense='conditioned',
-        simple_cnn='conditioned', complex_cnn='conditioned'
-    )
+    MODE = setting(default='conditioned', standard='standard')
 
-    SOURCE = setting(
-        default='vocals',   # only for standard version
-    )
-    NAME = 'test'
-    ADD_TIME = False
+    NAME = 'with_val_all_files'
+    ADD_TIME = False    # add the time and date in the name
+    TARGET = 'vocals'   # only for standard version
 
     # GENERATOR
     PATH_BASE = '/data2/anasynth_nonbp/meseguerbrocal/source_separation/musdb18/'
-    # INDEXES_TRAIN = 'train/indexes/indexes_standard_1_4.npz'
-    INDEXES_TRAIN = 'train/indexes/indexes_conditioned_1_4_1_True_True_1.0.npz'
-    # INDEXES_VAL = 'train/indexes/indexes_standard_128_4.npz'
-    INDEXES_VAL = 'train/indexes/indexes_conditioned_128_4_1_True_True_1.0.npz'
+    # default = conditioned
+    INDEXES_TRAIN = setting(
+        default=os.path.join(
+            PATH_BASE, 'train/indexes/indexes_conditioned_1_4_1_True_True_1.0.npz'),
+        standard=os.path.join(
+            PATH_BASE, 'train/indexes/indexes_standard_1_4.npz')
+    )
+    INDEXES_VAL = setting(
+        default=os.path.join(
+            PATH_BASE, 'train/indexes/indexes_conditioned_128_4_1_True_True_1.0.npz'),
+        standard=os.path.join(
+            PATH_BASE, 'train/indexes/indexes_standard_128_4.npz')
+    )
+
     NUM_THREADS = tf.data.experimental.AUTOTUNE   # 32
     N_PREFETCH = tf.data.experimental.AUTOTUNE  # 4096
 
@@ -36,7 +42,7 @@ class config(Config):
 
     # training
     BATCH_SIZE = 64
-    N_BATCH = 1024
+    N_BATCH = 2048
     N_EPOCH = 1000
     PROGRESSIVE = True
 
@@ -44,7 +50,7 @@ class config(Config):
     INPUT_SHAPE = [512, 128, 1]  # freq = 512, time = 128
     FILTERS_LAYER_1 = 16
     N_LAYERS = 6
-    LR = 1e-4
+    LR = 1e-3
     ACTIVATION_ENCODER = 'leaky_relu'
     ACTIVATION_DECODER = 'relu'
     ACT_LAST = 'sigmoid'

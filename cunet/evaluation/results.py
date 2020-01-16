@@ -166,8 +166,8 @@ def load_a_cunet():
     else:
         import tensorflow as tf
         model = load_model(config.PATH_MODEL,  custom_objects={"tf": tf})
-        # from cunet.config import config as config_model
-        # from cunet.models.cunet_model import cunet_model
+        # from cunet.train.config import config as config_model
+        # from cunet.train.models.cunet_model import cunet_model
         # config_model.set_group(config.PATH_MODEL.split('/')[-3])
         # model = cunet_model()
         # model.load_weights(config.PATH_MODEL)
