@@ -11,6 +11,9 @@ from cunet.train.data_loader import normlize_complex
 from cunet.preprocess.spectrogram import spec_complex
 
 
+logging.basicConfig(level=logging.INFO)
+
+
 def istft(data, data_config):
     return librosa.istft(
         data, hop_length=data_config.item()['HOP'],
@@ -79,7 +82,7 @@ def concatenate(data, shape):
 
 
 def analize_spec(orig_mix_spec, model, data_config, target_source):
-    logger = logging.getLogger('computing_spec')
+    logger = logging.getLogger('results')
     pred_audio = np.array([])
     orig_mix_spec = normlize_complex(orig_mix_spec)
     orig_mix_mag = np.abs(orig_mix_spec)
@@ -159,36 +162,44 @@ def create_pandas(files):
     return df
 
 
-def load_a_cunet():
+def load_a_cunet(target):
     model = None
     if config.MODE == 'standard':
-        model = load_model(config.PATH_MODEL)
+        path_results = os.path.join(config.PATH_MODEL, target, config.NAME)
+        path_model = os.path.join(path_results, config.NAME+'.h5')
+        model = load_model(path_model)
     else:
         import tensorflow as tf
-        model = load_model(config.PATH_MODEL,  custom_objects={"tf": tf})
+        path_results = os.path.join(config.PATH_MODEL, config.NAME)
+        path_model = os.path.join(path_results, config.NAME+'.h5')
+        model = load_model(path_model,  custom_objects={"tf": tf})
         # from cunet.train.config import config as config_model
         # from cunet.train.models.cunet_model import cunet_model
         # config_model.set_group(config.PATH_MODEL.split('/')[-3])
         # model = cunet_model()
         # model.load_weights(config.PATH_MODEL)
-    return model
+    return model, path_results
 
 
 def main():
-    logging.basicConfig(
-        filename=os.path.join(config.PATH_RESULTS, 'results.log'),
-        level=logging.INFO)
-    logger = logging.getLogger('computing_spec')
-    logger.info('Starting the computation')
+    config.parse_args()
     files = glob(os.path.join(config.PATH_AUDIO, '*.npz'))
     results = create_pandas(files)
-    model = load_a_cunet()
     count = 0
-    for i, fl in enumerate(files):
-        name = os.path.basename(os.path.normpath(fl)).replace('.npz', '')
-        audio = np.load(fl, allow_pickle=True)
-        logger.info('Song num: ' + str(i+1) + ' out of ' + str(len(files)))
-        for target in config.TARGET:
+    for target in config.TARGET:
+        model, path_results = load_a_cunet(target)
+        file_handler = logging.FileHandler(
+            os.path.join(path_results, 'results.log'),  mode='w')
+        file_handler.setLevel(logging.INFO)
+        logger = logging.getLogger('results')
+        logger.addHandler(file_handler)
+        logger.info('Starting the computation')
+        if config.MODE == 'standard':
+            results = create_pandas(files)
+        for i, fl in enumerate(files):
+            name = os.path.basename(os.path.normpath(fl)).replace('.npz', '')
+            audio = np.load(fl, allow_pickle=True)
+            logger.info('Song num: ' + str(i+1) + ' out of ' + str(len(files)))
             results.at[count, 'name'] = name
             results.at[count, 'target'] = target
             logger.info('Analyzing ' + name + ' for target ' + target)
@@ -196,8 +207,9 @@ def main():
              results.at[count, 'sar']) = do_an_exp(audio, target, model)
             logger.info(results.iloc[count])
             count += 1
-    name = "_".join(config.TARGET + ['results.pkl'])
-    results.to_pickle(os.path.join(config.PATH_RESULTS, name))
+        results.to_pickle(os.path.join(path_results, 'results.pkl'))
+        logger.removeHandler(file_handler)
+
     return
 
 

@@ -1,17 +1,28 @@
 # -*- coding: utf-8 -*-
-from effortless_config import Config
+from effortless_config import Config, setting
+import os
 
 
 class config(Config):
-    # PATH_MODEL = '/net/guzheng/data2/anasynth_nonbp/meseguerbrocal/source_separation/musdb18/models/standard/vocals/model.h5'
-    PATH_MODEL = '/net/guzheng/data2/anasynth_nonbp/meseguerbrocal/source_separation/musdb18/models/conditioned/simple_dense/test/test_final.h5'
+    groups = ['standard', 'simple_dense', 'complex_dense', 'simple_cnn',
+              'complex_cnn']
+    PATH_BASE = '/net/guzheng/data2/anasynth_nonbp/meseguerbrocal/source_separation/musdb18/models/'
+    NAME = 'with_val_all_files'
+
+    PATH_MODEL = setting(
+        os.path.join(PATH_BASE, 'conditioned/simple_dense'),
+        standard=os.path.join(PATH_BASE, 'standard'),
+        simple_dense=os.path.join(PATH_BASE, 'conditioned/simple_dense'),
+        complex_dense=os.path.join(PATH_BASE, 'conditioned/complex_dense'),
+        simple_cnn=os.path.join(PATH_BASE, 'conditioned/simple_cnn'),
+        complex_cnn=os.path.join(PATH_BASE, 'conditioned/complex_cnn')
+    )
     PATH_AUDIO = '/net/guzheng/data2/anasynth_nonbp/meseguerbrocal/source_separation/musdb18/test/complex'
-    TARGET = ['vocals']  # ['vocals', 'bass', 'bass_vocals'] -> not ready yet for complex conditions
+    TARGET = ['vocals', 'bass', 'drums', 'rest']  # ['vocals', 'bass', 'bass_vocals'] -> not ready yet for complex conditions
     INSTRUMENTS = ['bass', 'drums', 'rest', 'vocals']  # to check that has the same order than the training
     OVERLAP = 0
-    PATH_RESULTS = "/".join(PATH_MODEL.split('/')[:-1])
-    if 'standard' in PATH_MODEL:
-        MODE = 'standard'
-    if 'conditioned'in PATH_MODEL:
-        MODE = 'conditioned'
-        EMB_TYPE = PATH_MODEL.split('/')[-3].split('_')[-1]
+    MODE = setting(default='conditioned', standard='standard')
+    EMB_TYPE = setting(
+        default='dense', simple_dense='dense', complex_dense='dense',
+        simple_cnn='cnn', complex_cnn='cnn'
+    )
