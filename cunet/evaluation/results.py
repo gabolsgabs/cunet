@@ -155,7 +155,10 @@ def get_stats(dict, stat):
 
 def create_pandas(files):
     columns = ['name', 'target', 'sdr', 'sir', 'sar']
-    data = np.zeros((len(files)*len(config.TARGET), len(columns)))
+    if config.MODE == 'standard':
+        data = np.zeros((len(files), len(columns)))
+    else:
+        data = np.zeros((len(files)*len(config.TARGET), len(columns)))
     df = pd.DataFrame(data, columns=columns)
     df['name'] = df['name'].astype('str')
     df['target'] = df['target'].astype('str')
