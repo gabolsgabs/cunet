@@ -51,7 +51,8 @@ def make_checkpoint(folder):
     folder = os.path.join(folder, 'checkpoint')
     create_folder(folder)
     return ModelCheckpoint(
-        filepath=os.path.join(folder, 'ckpt_{epoch:02d}-{val_loss:.5f}'),
+        # filepath=os.path.join(folder, 'ckpt_{epoch:02d}-{val_loss:.5f}'),
+        filepath=os.path.join(folder, 'ckpt'),
         verbose=1, mode='min', save_best_only=True, save_weights_only=True,
         monitor='val_loss'
     )
@@ -59,7 +60,7 @@ def make_checkpoint(folder):
 
 def make_reduce_lr():
     return ReduceLROnPlateau(
-        monitor='val_loss', factor=0.5, min_lr=0.0001,
+        monitor='val_loss', factor=0.5, min_lr=1e-5, min_delta=1e-6,
         patience=config.REDUCE_PLATEAU_PATIENCE, verbose=1
     )
 

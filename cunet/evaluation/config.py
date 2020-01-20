@@ -6,6 +6,12 @@ import os
 class config(Config):
     groups = ['standard', 'simple_dense', 'complex_dense', 'simple_cnn',
               'complex_cnn']
+
+    GROUP = setting(
+        default='simple_dense', simple_dense='simple_dense',
+        complex_dense='complex_dense',
+        simple_cnn='simple_cnn', complex_cnn='complex_cnn',
+    )
     PATH_BASE = '/net/guzheng/data2/anasynth_nonbp/meseguerbrocal/source_separation/musdb18/models/'
     NAME = 'with_val_all_files'
 

@@ -36,7 +36,7 @@ class config(Config):
     N_PREFETCH = tf.data.experimental.AUTOTUNE  # 4096
 
     # checkpoints
-    EARLY_STOPPING_MIN_DELTA = 0.0
+    EARLY_STOPPING_MIN_DELTA = 1e-6
     EARLY_STOPPING_PATIENCE = 15
     REDUCE_PLATEAU_PATIENCE = 5
 
@@ -44,7 +44,7 @@ class config(Config):
     BATCH_SIZE = 64
     N_BATCH = 2048
     N_EPOCH = 1000
-    PROGRESSIVE = True
+    PROGRESSIVE = False
 
     # unet paramters
     INPUT_SHAPE = [512, 128, 1]  # freq = 512, time = 128

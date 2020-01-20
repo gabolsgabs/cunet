@@ -59,6 +59,7 @@ def load_data(files):
     return data
 
 
-DATA = load_data(
-    glob(os.path.join(config_pre.PATH_SPEC, '*.npz'))
-)
+def get_data():
+    return load_data(
+        glob(os.path.join(config_pre.PATH_SPEC, '*.npz'))
+    )

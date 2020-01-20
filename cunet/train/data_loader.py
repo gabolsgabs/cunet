@@ -3,12 +3,12 @@ import numpy as np
 import os
 import tensorflow as tf
 from cunet.train.config import config
-from cunet.train.load_data_offline import DATA
+from cunet.train.load_data_offline import get_data
 from cunet.train.others.val_files import VAL_FILES
 import random
 import logging
 
-
+DATA = get_data()
 logger = logging.getLogger('tensorflow')
 
 
@@ -23,19 +23,6 @@ def get_name(txt):
     return os.path.basename(os.path.normpath(txt)).replace('.npz', '')
 
 
-def complex_max(d):
-    return d[np.unravel_index(np.argmax(np.abs(d), axis=None), d.shape)]
-
-
-def complex_min(d):
-    return d[np.unravel_index(np.argmin(np.abs(d), axis=None), d.shape)]
-
-
-def normlize_complex(data):
-    return np.divide((data - complex_min(data)),
-                     (complex_max(data) - complex_min(data)))
-
-
 def progressive(data, conditions, dx):
     output = copy.deepcopy(data)
     if (
@@ -44,8 +31,8 @@ def progressive(data, conditions, dx):
     ):
         p = random.uniform(0, 1)
         conditions[dx] = conditions[dx]*p
-    output = output[:, :, dx]*conditions[dx]
-    return output, conditions
+        output[:, :, dx] = output[:, :, dx]*p
+    return output[:, :, dx], conditions
 
 
 def yield_data(indexes, files):
@@ -95,8 +82,7 @@ def prepare_data(data):
                         target_tmp, conditions = progressive(
                             target_complex, conditions, dx)
                         target = np.sum([target, target_tmp], axis=0)
-            if np.max(conditions) != 1:
-                target = np.abs(target)*np.max(conditions)
+        target = np.abs(target)
         mixture = np.abs(target_complex[:, :, -1])
         return check_shape(mixture), check_shape(target), conditions
     mixture, target, conditions = tf.py_function(

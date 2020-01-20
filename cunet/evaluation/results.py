@@ -7,7 +7,7 @@ import os
 import logging
 import pandas as pd
 from cunet.evaluation.config import config
-from cunet.train.data_loader import normlize_complex
+from cunet.train.load_data_offline import normlize_complex
 from cunet.preprocess.spectrogram import spec_complex
 
 
@@ -165,7 +165,7 @@ def create_pandas(files):
     return df
 
 
-def load_a_cunet(target):
+def load_a_cunet(target=None):
     model = None
     if config.MODE == 'standard':
         path_results = os.path.join(config.PATH_MODEL, target, config.NAME)
@@ -178,19 +178,21 @@ def load_a_cunet(target):
         model = load_model(path_model,  custom_objects={"tf": tf})
         # from cunet.train.config import config as config_model
         # from cunet.train.models.cunet_model import cunet_model
-        # config_model.set_group(config.PATH_MODEL.split('/')[-3])
+        # config_model.set_group(config.GROUP)
+        # latest = tf.train.latest_checkpoint(path_results+'/checkpoint')
         # model = cunet_model()
-        # model.load_weights(config.PATH_MODEL)
+        # model.load_weights(latest)
     return model, path_results
 
 
 def main():
+    i = 0
     config.parse_args()
     files = glob(os.path.join(config.PATH_AUDIO, '*.npz'))
-    results = create_pandas(files)
-    count = 0
+    if config.MODE == 'conditioned':
+        results = create_pandas(files)
+        model, path_results = load_a_cunet()
     for target in config.TARGET:
-        model, path_results = load_a_cunet(target)
         file_handler = logging.FileHandler(
             os.path.join(path_results, 'results.log'),  mode='w')
         file_handler.setLevel(logging.INFO)
@@ -198,18 +200,20 @@ def main():
         logger.addHandler(file_handler)
         logger.info('Starting the computation')
         if config.MODE == 'standard':
+            i = 0
             results = create_pandas(files)
-        for i, fl in enumerate(files):
+            model, path_results = load_a_cunet(target)
+        for fl in files:
             name = os.path.basename(os.path.normpath(fl)).replace('.npz', '')
             audio = np.load(fl, allow_pickle=True)
             logger.info('Song num: ' + str(i+1) + ' out of ' + str(len(files)))
-            results.at[count, 'name'] = name
-            results.at[count, 'target'] = target
+            results.at[i, 'name'] = name
+            results.at[i, 'target'] = target
             logger.info('Analyzing ' + name + ' for target ' + target)
-            (results.at[count, 'sdr'], results.at[count, 'sir'],
-             results.at[count, 'sar']) = do_an_exp(audio, target, model)
-            logger.info(results.iloc[count])
-            count += 1
+            (results.at[i, 'sdr'], results.at[i, 'sir'],
+             results.at[i, 'sar']) = do_an_exp(audio, target, model)
+            logger.info(results.iloc[i])
+            i += 1
         results.to_pickle(os.path.join(path_results, 'results.pkl'))
         logger.removeHandler(file_handler)
 

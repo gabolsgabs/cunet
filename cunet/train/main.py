@@ -10,7 +10,6 @@ from cunet.train.models.unet_model import unet_model
 import os
 
 from cunet.train.others.lock import get_lock
-import manage_gpus as gpl
 
 
 logger = tf.get_logger()
@@ -22,7 +21,7 @@ def main():
     name = make_name()
     save_path = save_dir('models', name)
     write_config(save_path)
-    gpu_id_locked = get_lock()
+    _ = get_lock()
     logger.info('Starting the computation')
 
     logger.info('Running training with config %s' % str(config))
@@ -61,9 +60,6 @@ def main():
     logger.info('Saving model %s' % name)
     model.save(os.path.join(save_path, name+'.h5'))
     logger.info('Done!')
-
-    if gpu_id_locked >= 0:
-        gpl.free_lock(gpu_id_locked)
     return
 
 
