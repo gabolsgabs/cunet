@@ -1,0 +1,14 @@
+version: "0.1"
+name: unet
+python: "3.6"
+workdir: cunet/evaluation
+python_requirements:
+  - tensorflow==2.0.0a0
+  - mir_eval==0.5
+  - librosa==0.7.2
+type:
+  input: audio
+  output: timed_events
+run:
+  setup: results_replicate.py:load_a_cunet()
+  infer: results_replicate.py:separate_audio_replicate(model, path_audio)
