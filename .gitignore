@@ -3,6 +3,9 @@
 /cunet/evaluation/visualizing.py
 /vunet
 
+.replicate
+*.h5
+
 *.DS_Store
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -11,6 +14,7 @@ __pycache__/
 
 # C extensions
 *.so
+*.nfs*
 
 # Distribution / packaging
 .Python

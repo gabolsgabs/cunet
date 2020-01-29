@@ -7,6 +7,7 @@ import os
 import logging
 import pandas as pd
 from cunet.evaluation.config import config
+from cunet.preprocess.config import config as config_prepro
 from cunet.train.load_data_offline import normlize_complex
 from cunet.preprocess.spectrogram import spec_complex
 
@@ -14,10 +15,10 @@ from cunet.preprocess.spectrogram import spec_complex
 logging.basicConfig(level=logging.INFO)
 
 
-def istft(data, data_config):
+def istft(data):
     return librosa.istft(
-        data, hop_length=data_config.item()['HOP'],
-        win_length=data_config.item()['FFT_SIZE'])
+        data, hop_length=config_prepro.HOP,
+        win_length=config_prepro.FFT_SIZE)
 
 
 def adapt_pred(pred, target):
@@ -31,11 +32,11 @@ def adapt_pred(pred, target):
     # return (pred - np.mean(pred)) / np.std(target)
 
 
-def reconstruct(pred_mag, orig_mix_phase, orig_mix_mag, data_config):
+def reconstruct(pred_mag, orig_mix_phase, orig_mix_mag):
     pred_mag = pred_mag[:, :orig_mix_phase.shape[1]]
     pred_mag /= np.max(pred_mag)
     pred_spec = pred_mag * np.exp(1j * orig_mix_phase)
-    return istft(pred_spec, data_config)
+    return istft(pred_spec)
 
 
 def prepare_a_song(spec, num_frames, num_bands):
@@ -54,11 +55,13 @@ def prepare_a_song(spec, num_frames, num_bands):
     return segments
 
 
-def separate_audio(path_audio, path_output, model):
-    pred_audio, pred_mag = analize_spec(spec_complex(path_audio), model)
+def separate_audio(path_audio, path_output, model, cond):
+    y, _ = analize_spec(
+        spec_complex(path_audio)['spec'], model, cond)
+    y = (y - np.min(y))/(np.max(y) - np.min(y))
     name = path_audio.split('/')[-1].replace('.mp3', '.wav')
     name = os.path.join(path_output, name)
-    librosa.output.write_wav(pred_audio, name)
+    librosa.output.write_wav(name, y, sr=config_prepro.FR)
     return
 
 
@@ -81,7 +84,7 @@ def concatenate(data, shape):
     return output
 
 
-def analize_spec(orig_mix_spec, model, data_config, target_source):
+def analize_spec(orig_mix_spec, model, cond):
     logger = logging.getLogger('results')
     pred_audio = np.array([])
     orig_mix_spec = normlize_complex(orig_mix_spec)
@@ -96,9 +99,6 @@ def analize_spec(orig_mix_spec, model, data_config, target_source):
         if config.MODE == 'conditioned':
             num_bands, num_frames = model.input_shape[0][1:3]
             x = prepare_a_song(orig_mix_mag, num_frames, num_bands)
-            cond = np.zeros(len(config.INSTRUMENTS))
-            for i in target_source.split('_'):
-                cond[config.INSTRUMENTS.index(i)] = 1.
             if config.EMB_TYPE == 'dense':
                 cond = cond.reshape(1, -1)
             if config.EMB_TYPE == 'cnn':
@@ -109,7 +109,7 @@ def analize_spec(orig_mix_spec, model, data_config, target_source):
         pred_mag = np.squeeze(
             concatenate(pred_mag, orig_mix_spec.shape), axis=-1)
         pred_audio = reconstruct(
-            pred_mag, orig_mix_phase, orig_mix_mag, data_config)
+            pred_mag, orig_mix_phase, orig_mix_mag)
     except Exception as my_error:
         logger.error(my_error)
     return pred_audio, pred_mag
@@ -124,14 +124,16 @@ def do_an_exp(audio, target_source, model):
             else:
                 accompaniment = np.sum([accompaniment, audio[i]], axis=0)
     # original isolate target
-    target = istft(audio[target_source], audio['config'])
+    target = istft(audio[target_source])
     # original mix
-    mix = istft(audio['mix'], audio['config'])
+    mix = istft(audio['mix'])
     # accompaniment (sum of all apart from the original)
-    acc = istft(accompaniment, audio['config'])
+    acc = istft(accompaniment)
     # predicted separation
-    pred_audio, pred_mag = analize_spec(
-        audio['mix'], model, audio['config'], target_source)
+    cond = np.zeros(len(config.INSTRUMENTS))
+    for i in target_source.split('_'):
+        cond[config.INSTRUMENTS.index(i)] = 1.
+    pred_audio, pred_mag = analize_spec(audio['mix'], model, cond)
     # to go back to the range of values of the original target
     pred_audio = adapt_pred(pred_audio, target)
     # size
@@ -193,20 +195,20 @@ def main():
         results = create_pandas(files)
         model, path_results = load_a_cunet()
     for target in config.TARGET:
+        if config.MODE == 'standard':
+            i = 0
+            results = create_pandas(files)
+            model, path_results = load_a_cunet(target)
         file_handler = logging.FileHandler(
             os.path.join(path_results, 'results.log'),  mode='w')
         file_handler.setLevel(logging.INFO)
         logger = logging.getLogger('results')
         logger.addHandler(file_handler)
         logger.info('Starting the computation')
-        if config.MODE == 'standard':
-            i = 0
-            results = create_pandas(files)
-            model, path_results = load_a_cunet(target)
         for fl in files:
             name = os.path.basename(os.path.normpath(fl)).replace('.npz', '')
             audio = np.load(fl, allow_pickle=True)
-            logger.info('Song num: ' + str(i+1) + ' out of ' + str(len(files)))
+            logger.info('Song num: ' + str(i+1) + ' out of ' + str(len(results)))
             results.at[i, 'name'] = name
             results.at[i, 'target'] = target
             logger.info('Analyzing ' + name + ' for target ' + target)
@@ -216,7 +218,6 @@ def main():
             i += 1
         results.to_pickle(os.path.join(path_results, 'results.pkl'))
         logger.removeHandler(file_handler)
-
     return
 
 
