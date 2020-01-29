@@ -5,6 +5,8 @@
 
 .replicate
 *.h5
+*.nfs*
+*.fuse_*
 
 *.DS_Store
 # Byte-compiled / optimized / DLL files

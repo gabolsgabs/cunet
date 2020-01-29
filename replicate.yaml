@@ -14,7 +14,7 @@ type:
   input: audio
   output:
     type: audio
-    sample_rate: 44100
+    sample_rate: 8192
 run:
   setup: cunet/evaluation/results_replicate.py:load_a_cunet()
   infer: cunet/evaluation/results_replicate.py:separate_audio_replicate(model, path_audio)

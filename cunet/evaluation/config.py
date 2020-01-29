@@ -8,8 +8,8 @@ class config(Config):
               'complex_cnn']
 
     GROUP = setting(
-        default='simple_dense', simple_dense='simple_dense',
-        complex_dense='complex_dense',
+        default='simple_dense', standard='standard',
+        simple_dense='simple_dense', complex_dense='complex_dense',
         simple_cnn='simple_cnn', complex_cnn='complex_cnn',
     )
     PATH_BASE = '/net/guzheng/data2/anasynth_nonbp/meseguerbrocal/source_separation/musdb18/models/'
