@@ -11,5 +11,5 @@ def separate_audio_replicate(model, path_audio):
 
 
 def load_a_cunet():
-    model = load_model('with_val_all_files.h5')
+    model = load_model('cunet/evaluation/with_val_all_files.h5')
     return model
