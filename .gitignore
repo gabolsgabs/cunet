@@ -3,6 +3,8 @@
 /cunet/evaluation/visualizing.py
 /vunet
 
+.replicate
+
 *.DS_Store
 # Byte-compiled / optimized / DLL files
 __pycache__/
