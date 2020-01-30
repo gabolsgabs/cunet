@@ -1,11 +1,11 @@
 version: "0.1"
 name: unet
-python: "3.6"
+python: "3.7"
 python_requirements:
   - sndfile
   - pandas
   - effortless-config
-  - tensorflow==2.0.0a0
+  - tensorflow==2.1.0
   - mir_eval==0.5
   - librosa==0.7.2
 system_packages:
