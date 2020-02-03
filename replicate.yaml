@@ -10,6 +10,7 @@ python_requirements:
   - librosa==0.7.2
 system_packages:
   - libsndfile-dev
+  - ffmpeg
 type:
   input: audio
   output:
