@@ -61,30 +61,52 @@ def load_indexes_file(val_set=False):
     return yield_data(indexes, files, val_set)
 
 
+def get_data_aug(data_complex, target, conditions, val_set):
+    mixture = data_complex[:, :, -1]
+    # 25% of doing it a random point of another track
+    if not val_set and random.sample(range(0, 4), 1)[0] == 0 and config.AUG:
+        print('DONE')
+        mixture = copy.deepcopy(target)
+        n_frames = config.INPUT_SHAPE[1]
+        uid = random.choice([i for i in DATA.keys()])
+        tmp_data = DATA[uid]
+        frame = random.choice(
+            [i for i in range(tmp_data.shape[1]-config.INPUT_SHAPE[1])]
+        )
+        for i in np.where(conditions == 0)[0]:
+            mixture = np.sum(
+                [tmp_data[:, frame:frame+n_frames, i], mixture], axis=0
+            )
+    return np.abs(mixture)
+
+
 @tf.function(autograph=False)
 def prepare_data(data):
-    def py_prepare_data(target_complex, conditions, val_set):
-        target_complex = target_complex.numpy()
+    def py_prepare_data(data_complex, conditions, val_set):
+        data_complex = data_complex.numpy()
         conditions = conditions.numpy()
         if config.MODE == 'standard':
             # the instrument is already selected and normalized in load_files
-            target = np.abs(target_complex[:, :, 0])    # thus target in 0
+            target = np.abs(data_complex[:, :, 0])    # thus target in 0
+            mixture = np.abs(data_complex[:, :, -1])
         if config.MODE == 'conditioned':
             i = np.nonzero(conditions)[0]
-            target = np.zeros(target_complex.shape[:2]).astype(np.complex64)
+            target = np.zeros(data_complex.shape[:2]).astype(np.complex64)
             if len(i) > 0:
                 # simple conditions
                 if len(i) == 1:
                     target, conditions = progressive(
-                        target_complex, conditions, i[0], val_set)
+                        data_complex, conditions, i[0], val_set)
                 # complex conditions
                 if len(i) > 1:
                     for dx in i:
                         target_tmp, conditions = progressive(
-                            target_complex, conditions, dx, val_set)
+                            data_complex, conditions, dx, val_set)
                         target = np.sum([target, target_tmp], axis=0)
+                mixture = get_data_aug(
+                    data_complex, target, conditions, val_set
+                )
         target = np.abs(target)
-        mixture = np.abs(target_complex[:, :, -1])
         return check_shape(mixture), check_shape(target), conditions
     mixture, target, conditions = tf.py_function(
         py_prepare_data, [data['data'], data['conditions'], data['val']],

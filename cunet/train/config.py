@@ -15,6 +15,7 @@ class config(Config):
     NAME = 'with_new_norm'
     ADD_TIME = False    # add the time and date in the name
     TARGET = 'vocals'   # only for standard version
+    AUG = True
 
     # GENERATOR
     PATH_BASE = '/net/guzheng/data2/anasynth_nonbp/meseguerbrocal/source_separation/musdb18/'
