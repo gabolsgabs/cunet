@@ -4,6 +4,8 @@ import os
 from cunet.train.config import config
 import logging
 from glob import glob
+import gc
+from joblib import Parallel, delayed
 from cunet.preprocess.config import config as config_pre
 
 
@@ -39,43 +41,40 @@ def get_max_complex(data, keys):
     return np.array([complex_max(data[i]) for i in keys])[pos]
 
 
+def load_a_file(fl):
+    data = {}
+    logger.info('Loading the file %s' % fl)
+    data_tmp = np.load(fl, allow_pickle=True)
+    if config.MODE == 'standard':
+        data = np.empty([*data_tmp['mix'].shape, 2], dtype=np.complex64)
+        c_max = get_max_complex(data_tmp, ['mix', config.TARGET])
+        data[:, :, 0] = normlize_complex(data_tmp[config.TARGET], c_max)
+        data[:, :, 1] = normlize_complex(data_tmp['mix'], c_max)
+    if config.MODE == 'conditioned':
+        sources = copy.deepcopy(data_tmp.files)
+        sources.remove('config')
+        # to be sure that the mix is the last element
+        sources.insert(len(sources), sources.pop(sources.index('mix')))
+        data = np.empty(
+            [*data_tmp['mix'].shape, len(sources)], dtype=np.complex64
+        )
+        c_max = get_max_complex(data_tmp, sources)
+        for j, value in enumerate(sources):
+            data[:, :, j] = normlize_complex(data_tmp[value], c_max)
+    return (get_name(fl), data)
+
+
 def load_data(files):
     """The data is loaded in memory just once for the generator to have direct
     access to it"""
-    data = {}
-    sources = []
-    for i in files:
-        logger.info('Loading the file %s' % i)
-        data_tmp = np.load(i, allow_pickle=True)
-        if config.MODE == 'standard':
-            data[get_name(i)] = np.empty(
-                [*data_tmp['mix'].shape, 2], dtype=np.complex64
+    data = {
+        k: v for k, v in Parallel(n_jobs=16, verbose=5)(
+                delayed(load_a_file)(fl=fl) for fl in files
             )
-            c_max = get_max_complex(data_tmp, ['mix', config.TARGET])
-            data[get_name(i)][:, :, 0] = normlize_complex(
-                data_tmp[config.TARGET], c_max)
-            data[get_name(i)][:, :, 1] = normlize_complex(
-                data_tmp['mix'], c_max)
-        if config.MODE == 'conditioned':
-            if len(sources) == 0:
-                sources = copy.deepcopy(data_tmp.files)
-                sources.remove('config')
-                # to be sure that the mix is the last element
-                sources.insert(len(sources), sources.pop(sources.index('mix')))
-            data[get_name(i)] = np.empty(
-                [*data_tmp['mix'].shape, len(sources)], dtype=np.complex64
-            )
-            c_max = get_max_complex(data_tmp, sources)
-            for j, value in enumerate(sources):
-                data[get_name(i)][:, :, j] = normlize_complex(
-                    data_tmp[value], c_max
-                )
-    if config.MODE == 'conditioned':
-        logger.info('Source order %s' % sources)
+    }
+    _ = gc.collect()
     return data
 
 
 def get_data():
-    return load_data(
-        glob(os.path.join(config_pre.PATH_SPEC, '*.npz'))
-    )
+    return load_data(glob(os.path.join(config_pre.PATH_SPEC, '*.npz')))

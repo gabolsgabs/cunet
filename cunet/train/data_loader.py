@@ -4,7 +4,7 @@ import os
 import tensorflow as tf
 from cunet.train.config import config
 from cunet.train.load_data_offline import get_data
-from cunet.train.others.val_files import VAL_FILES
+# from cunet.train.others.val_files import VAL_FILES
 import random
 import logging
 
@@ -53,11 +53,13 @@ def load_indexes_file(val_set=False):
         r = list(range(len(indexes)))
         random.shuffle(r)
         indexes = indexes[r]
-        files = [i for i in DATA.keys() if i is not VAL_FILES]
+        # files = [i for i in DATA.keys() if i is not VAL_FILES]
+        files = list(DATA.keys())
     else:
         # Indexes val has no overlapp in the data points
         indexes = np.load(config.INDEXES_VAL, allow_pickle=True)['indexes']
-        files = VAL_FILES
+        # files = VAL_FILES
+        files = list(DATA.keys())
     return yield_data(indexes, files, val_set)
 
 
@@ -65,7 +67,6 @@ def get_data_aug(data_complex, target, conditions, val_set):
     mixture = data_complex[:, :, -1]
     # 25% of doing it a random point of another track
     if not val_set and random.sample(range(0, 4), 1)[0] == 0 and config.AUG:
-        print('DONE')
         mixture = copy.deepcopy(target)
         n_frames = config.INPUT_SHAPE[1]
         uid = random.choice([i for i in DATA.keys()])
@@ -103,9 +104,9 @@ def prepare_data(data):
                         target_tmp, conditions = progressive(
                             data_complex, conditions, dx, val_set)
                         target = np.sum([target, target_tmp], axis=0)
-                mixture = get_data_aug(
-                    data_complex, target, conditions, val_set
-                )
+            mixture = get_data_aug(
+                data_complex, target, conditions, val_set
+            )
         target = np.abs(target)
         return check_shape(mixture), check_shape(target), conditions
     mixture, target, conditions = tf.py_function(
