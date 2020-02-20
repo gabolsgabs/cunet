@@ -26,12 +26,11 @@ def u_net_conv_block(
 
 
 def u_net_deconv_block(
-    x_decod, x_encod, n_filters, initializer, activation, dropout, skip,
+    x, x_encod, n_filters, initializer, activation, dropout, skip,
     kernel_size=(5, 5), strides=(2, 2), padding='same'
 ):
-    x = x_encod
     if skip:
-        x = Concatenate(axis=3)([x_decod, x])
+        x = Concatenate(axis=3)([x, x_encod])
     x = Conv2DTranspose(
         n_filters, kernel_size=kernel_size, padding=padding, strides=strides,
         kernel_initializer=initializer)(x)

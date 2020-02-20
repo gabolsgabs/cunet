@@ -1,5 +1,6 @@
 from glob import glob
 import librosa
+import tensorflow as tf
 from tensorflow.keras.models import load_model
 import mir_eval
 import numpy as np
@@ -167,23 +168,36 @@ def create_pandas(files):
     return df
 
 
+def load_checkpoint(path_results):
+    from cunet.train.models.unet_model import unet_model
+    from cunet.train.models.cunet_model import cunet_model
+    path_results = os.path.join(path_results, 'checkpoint')
+    latest = tf.train.latest_checkpoint(path_results)
+    if config.MODE == 'standard':
+        model = unet_model()
+    if config.MODE == 'conditioned':
+        model = cunet_model()
+    model.load_weights(latest)
+    return model
+
+
 def load_a_cunet(target=None):
     model = None
     if config.MODE == 'standard':
         path_results = os.path.join(config.PATH_MODEL, target, config.NAME)
         path_model = os.path.join(path_results, config.NAME+'.h5')
-        model = load_model(path_model)
+        if os.path.exists(path_model):
+            model = load_model(path_model)
+        else:
+            model = load_checkpoint(path_results)
     else:
-        import tensorflow as tf
         path_results = os.path.join(config.PATH_MODEL, config.NAME)
         path_model = os.path.join(path_results, config.NAME+'.h5')
         model = load_model(path_model,  custom_objects={"tf": tf})
-        # from cunet.train.config import config as config_model
-        # from cunet.train.models.cunet_model import cunet_model
-        # config_model.set_group(config.GROUP)
-        # latest = tf.train.latest_checkpoint(path_results+'/checkpoint')
-        # model = cunet_model()
-        # model.load_weights(latest)
+        if os.path.exists(path_model):
+            model = load_model(path_model,  custom_objects={"tf": tf})
+        else:
+            model = load_checkpoint(path_results)
     return model, path_results
 
 

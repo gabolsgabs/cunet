@@ -22,9 +22,21 @@ def complex_min(d):
     return d[np.unravel_index(np.argmin(np.abs(d), axis=None), d.shape)]
 
 
-def normlize_complex(data):
-    return np.divide((data - complex_min(data)),
-                     (complex_max(data) - complex_min(data)))
+def normlize_complex(data, c_max=1):
+    if c_max != 1:
+        factor = np.divide(complex_max(data), c_max)
+    else:
+        factor = 1
+    # normalize between 0-1
+    output = np.divide((data - complex_min(data)),
+                       (complex_max(data) - complex_min(data)))
+    return np.multiply(output, factor)  # scale to the original range
+
+
+def get_max_complex(data, keys):
+    # sometimes the max is not the mixture
+    pos = np.argmax([np.abs(complex_max(data[i])) for i in keys])
+    return np.array([complex_max(data[i]) for i in keys])[pos]
 
 
 def load_data(files):
@@ -39,10 +51,11 @@ def load_data(files):
             data[get_name(i)] = np.empty(
                 [*data_tmp['mix'].shape, 2], dtype=np.complex64
             )
+            c_max = get_max_complex(data_tmp, ['mix', config.TARGET])
             data[get_name(i)][:, :, 0] = normlize_complex(
-                data_tmp[config.TARGET])
+                data_tmp[config.TARGET], c_max)
             data[get_name(i)][:, :, 1] = normlize_complex(
-                data_tmp['mix'])
+                data_tmp['mix'], c_max)
         if config.MODE == 'conditioned':
             if len(sources) == 0:
                 sources = copy.deepcopy(data_tmp.files)
@@ -52,8 +65,11 @@ def load_data(files):
             data[get_name(i)] = np.empty(
                 [*data_tmp['mix'].shape, len(sources)], dtype=np.complex64
             )
+            c_max = get_max_complex(data_tmp, sources)
             for j, value in enumerate(sources):
-                data[get_name(i)][:, :, j] = normlize_complex(data_tmp[value])
+                data[get_name(i)][:, :, j] = normlize_complex(
+                    data_tmp[value], c_max
+                )
     if config.MODE == 'conditioned':
         logger.info('Source order %s' % sources)
     return data

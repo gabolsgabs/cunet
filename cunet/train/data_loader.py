@@ -23,11 +23,12 @@ def get_name(txt):
     return os.path.basename(os.path.normpath(txt)).replace('.npz', '')
 
 
-def progressive(data, conditions, dx):
+def progressive(data, conditions, dx, val_set):
     output = copy.deepcopy(data)
     if (
         config.PROGRESSIVE and np.max(np.abs(data)) > 0
         and random.sample(range(0, 4), 1)[0] == 0   # 25% of doing it
+        and not val_set
     ):
         p = random.uniform(0, 1)
         conditions[dx] = conditions[dx]*p
@@ -35,7 +36,7 @@ def progressive(data, conditions, dx):
     return output[:, :, dx], conditions
 
 
-def yield_data(indexes, files):
+def yield_data(indexes, files, val_set):
     conditions = np.zeros(1).astype(np.float32)
     n_frames = config.INPUT_SHAPE[1]
     for i in indexes:
@@ -43,7 +44,7 @@ def yield_data(indexes, files):
             if len(i) > 2:
                 conditions = i[2]
             yield {'data': DATA[i[0]][:, i[1]:i[1]+n_frames, :],
-                   'conditions': conditions}
+                   'conditions': conditions, 'val': val_set}
 
 
 def load_indexes_file(val_set=False):
@@ -57,12 +58,12 @@ def load_indexes_file(val_set=False):
         # Indexes val has no overlapp in the data points
         indexes = np.load(config.INDEXES_VAL, allow_pickle=True)['indexes']
         files = VAL_FILES
-    return yield_data(indexes, files)
+    return yield_data(indexes, files, val_set)
 
 
 @tf.function(autograph=False)
 def prepare_data(data):
-    def py_prepare_data(target_complex, conditions):
+    def py_prepare_data(target_complex, conditions, val_set):
         target_complex = target_complex.numpy()
         conditions = conditions.numpy()
         if config.MODE == 'standard':
@@ -75,18 +76,18 @@ def prepare_data(data):
                 # simple conditions
                 if len(i) == 1:
                     target, conditions = progressive(
-                        target_complex, conditions, i[0])
+                        target_complex, conditions, i[0], val_set)
                 # complex conditions
                 if len(i) > 1:
                     for dx in i:
                         target_tmp, conditions = progressive(
-                            target_complex, conditions, dx)
+                            target_complex, conditions, dx, val_set)
                         target = np.sum([target, target_tmp], axis=0)
         target = np.abs(target)
         mixture = np.abs(target_complex[:, :, -1])
         return check_shape(mixture), check_shape(target), conditions
     mixture, target, conditions = tf.py_function(
-        py_prepare_data, [data['data'], data['conditions']],
+        py_prepare_data, [data['data'], data['conditions'], data['val']],
         (tf.float32, tf.float32, tf.float32)
     )
     return {'mix': mixture, 'target': target, 'conditions': conditions}
@@ -111,7 +112,7 @@ def convert_to_estimator_input(d):
 def dataset_generator(val_set=False):
     ds = tf.data.Dataset.from_generator(
         load_indexes_file,
-        {'data': tf.complex64, 'conditions': tf.float32},
+        {'data': tf.complex64, 'conditions': tf.float32, 'val': tf.bool},
         args=[val_set]
     ).map(
         prepare_data, num_parallel_calls=config.NUM_THREADS

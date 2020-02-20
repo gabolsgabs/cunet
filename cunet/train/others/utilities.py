@@ -60,7 +60,8 @@ def make_checkpoint(folder):
 
 def make_reduce_lr():
     return ReduceLROnPlateau(
-        monitor='val_loss', factor=0.5, min_lr=1e-5, min_delta=1e-6,
+        monitor='val_loss', factor=0.5, min_lr=1e-5,
+        min_delta=config.EARLY_STOPPING_MIN_DELTA,
         patience=config.REDUCE_PLATEAU_PATIENCE, verbose=1
     )
 

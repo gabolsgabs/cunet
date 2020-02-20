@@ -4,7 +4,7 @@ from effortless_config import Config, setting
 
 class config(Config):
     groups = ['train', 'test']
-    PATH_BASE = '/data2/anasynth_nonbp/meseguerbrocal/source_separation/musdb18/'
+    PATH_BASE = '/net/guzheng/data2/anasynth_nonbp/meseguerbrocal/source_separation/musdb18/'
     PATH_RAW = setting(
         default=PATH_BASE+'train/raw_audio/',
         train=PATH_BASE+'train/raw_audio/', test=PATH_BASE+'test/raw_audio/'

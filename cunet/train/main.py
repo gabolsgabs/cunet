@@ -45,6 +45,9 @@ def main():
     ds_val = dataset_generator(val_set=True)
 
     logger.info('Starting training for %s' % name)
+
+    # USE VAL_STEPS!!
+    
     model.fit(
         ds_train,
         validation_data=ds_val,
