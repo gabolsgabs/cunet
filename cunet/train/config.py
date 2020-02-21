@@ -15,20 +15,19 @@ class config(Config):
     NAME = 'with_new_norm_and_aug'
     ADD_TIME = False    # add the time and date in the name
     TARGET = 'vocals'   # only for standard version
-    AUG = True
 
     # GENERATOR
     PATH_BASE = '/net/guzheng/data2/anasynth_nonbp/meseguerbrocal/source_separation/musdb18/'
     # default = conditioned
     INDEXES_TRAIN = setting(
         default=os.path.join(
-            PATH_BASE, 'train/indexes/indexes_conditioned_1_4_1_True_True_1.0.npz'),
+            PATH_BASE, 'train/indexes/indexes_conditioned_1_4_1_False_False_1.0.npz'),
         standard=os.path.join(
             PATH_BASE, 'train/indexes/indexes_standard_1_4.npz')
     )
     INDEXES_VAL = setting(
         default=os.path.join(
-            PATH_BASE, 'train/indexes/indexes_conditioned_128_4_1_True_True_1.0.npz'),
+            PATH_BASE, 'train/indexes/indexes_conditioned_128_4_1_False_False_1.0.npz'),
         standard=os.path.join(
             PATH_BASE, 'train/indexes/indexes_standard_128_4.npz')
     )
@@ -37,15 +36,16 @@ class config(Config):
     N_PREFETCH = tf.data.experimental.AUTOTUNE  # 4096
 
     # checkpoints
-    EARLY_STOPPING_MIN_DELTA = 1e-6
-    EARLY_STOPPING_PATIENCE = 15
-    REDUCE_PLATEAU_PATIENCE = 5
+    EARLY_STOPPING_MIN_DELTA = 1e-5
+    EARLY_STOPPING_PATIENCE = 30
+    REDUCE_PLATEAU_PATIENCE = 15
 
     # training
     BATCH_SIZE = 64
     N_BATCH = 2048
     N_EPOCH = 1000
     PROGRESSIVE = True
+    AUG = True
 
     # unet paramters
     INPUT_SHAPE = [512, 128, 1]  # freq = 512, time = 128

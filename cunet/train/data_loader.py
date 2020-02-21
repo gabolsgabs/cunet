@@ -4,7 +4,7 @@ import os
 import tensorflow as tf
 from cunet.train.config import config
 from cunet.train.load_data_offline import get_data
-# from cunet.train.others.val_files import VAL_FILES
+from cunet.train.others.val_files import VAL_FILES
 import random
 import logging
 
@@ -53,13 +53,11 @@ def load_indexes_file(val_set=False):
         r = list(range(len(indexes)))
         random.shuffle(r)
         indexes = indexes[r]
-        # files = [i for i in DATA.keys() if i is not VAL_FILES]
-        files = list(DATA.keys())
+        files = [i for i in DATA.keys() if i is not VAL_FILES]
     else:
         # Indexes val has no overlapp in the data points
         indexes = np.load(config.INDEXES_VAL, allow_pickle=True)['indexes']
-        # files = VAL_FILES
-        files = list(DATA.keys())
+        files = VAL_FILES
     return yield_data(indexes, files, val_set)
 
 
@@ -69,12 +67,12 @@ def get_data_aug(data_complex, target, conditions, val_set):
     if not val_set and random.sample(range(0, 4), 1)[0] == 0 and config.AUG:
         mixture = copy.deepcopy(target)
         n_frames = config.INPUT_SHAPE[1]
-        uid = random.choice([i for i in DATA.keys()])
-        tmp_data = DATA[uid]
-        frame = random.choice(
-            [i for i in range(tmp_data.shape[1]-config.INPUT_SHAPE[1])]
-        )
         for i in np.where(conditions == 0)[0]:
+            uid = random.choice([i for i in DATA.keys()])
+            tmp_data = DATA[uid]
+            frame = random.choice(
+                [i for i in range(tmp_data.shape[1]-config.INPUT_SHAPE[1])]
+            )
             mixture = np.sum(
                 [tmp_data[:, frame:frame+n_frames, i], mixture], axis=0
             )
@@ -91,21 +89,29 @@ def prepare_data(data):
             target = np.abs(data_complex[:, :, 0])    # thus target in 0
             mixture = np.abs(data_complex[:, :, -1])
         if config.MODE == 'conditioned':
-            i = np.nonzero(conditions)[0]
+            argcond = np.nonzero(conditions)[0]
             target = np.zeros(data_complex.shape[:2]).astype(np.complex64)
-            if len(i) > 0:
+            target_for_mix = np.zeros(
+                data_complex.shape[:2]).astype(np.complex64)
+            if len(argcond) > 0:
                 # simple conditions
-                if len(i) == 1:
+                if len(argcond) == 1:
                     target, conditions = progressive(
-                        data_complex, conditions, i[0], val_set)
+                        data_complex, conditions, argcond[0], val_set
+                    )
+                    target_for_mix = data_complex[:, :, argcond[0]]
                 # complex conditions
-                if len(i) > 1:
-                    for dx in i:
+                if len(argcond) > 1:
+                    for dx in argcond:
                         target_tmp, conditions = progressive(
-                            data_complex, conditions, dx, val_set)
+                            data_complex, conditions, dx, val_set
+                        )
                         target = np.sum([target, target_tmp], axis=0)
+                        target_for_mix = np.sum(
+                            [target_for_mix, data_complex[:, :, dx]], axis=0
+                        )
             mixture = get_data_aug(
-                data_complex, target, conditions, val_set
+                data_complex, target_for_mix, conditions, val_set
             )
         target = np.abs(target)
         return check_shape(mixture), check_shape(target), conditions

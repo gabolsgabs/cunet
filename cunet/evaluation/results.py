@@ -193,7 +193,6 @@ def load_a_cunet(target=None):
     else:
         path_results = os.path.join(config.PATH_MODEL, config.NAME)
         path_model = os.path.join(path_results, config.NAME+'.h5')
-        model = load_model(path_model,  custom_objects={"tf": tf})
         if os.path.exists(path_model):
             model = load_model(path_model,  custom_objects={"tf": tf})
         else:
