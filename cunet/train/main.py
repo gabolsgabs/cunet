@@ -9,8 +9,6 @@ from cunet.train.models.cunet_model import cunet_model
 from cunet.train.models.unet_model import unet_model
 import os
 
-from cunet.train.others.lock import get_lock
-
 
 logger = tf.get_logger()
 logger.setLevel(logging.INFO)
@@ -21,7 +19,6 @@ def main():
     name = make_name()
     save_path = save_dir('models', name)
     write_config(save_path)
-    _ = get_lock()
     logger.info('Starting the computation')
 
     logger.info('Running training with config %s' % str(config))
@@ -46,8 +43,6 @@ def main():
 
     logger.info('Starting training for %s' % name)
 
-    # USE VAL_STEPS!!
-    
     model.fit(
         ds_train,
         validation_data=ds_val,

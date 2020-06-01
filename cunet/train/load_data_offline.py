@@ -25,6 +25,10 @@ def complex_min(d):
 
 
 def normlize_complex(data, c_max=1):
+    """ Each source preserve its range of values i.e.
+    if the max of source_1 is .89 the max in the mixture, after the normalizaiton
+    it is still .89, not 1
+    """
     if c_max != 1:
         factor = np.divide(complex_max(data), c_max)
     else:

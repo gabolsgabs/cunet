@@ -1,7 +1,6 @@
 from glob import glob
 import librosa
 import tensorflow as tf
-from tensorflow.keras.models import load_model
 import mir_eval
 import numpy as np
 import os
@@ -182,6 +181,7 @@ def load_checkpoint(path_results):
 
 
 def load_a_cunet(target=None):
+    from tensorflow.keras.models import load_model
     model = None
     if config.MODE == 'standard':
         path_results = os.path.join(config.PATH_MODEL, target, config.NAME)

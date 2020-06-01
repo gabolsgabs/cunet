@@ -28,7 +28,6 @@ def u_net_conv_block(
 
 
 def cunet_model():
-    # axis should be fr, time -> right not it's time freqs
     inputs = Input(shape=config.INPUT_SHAPE)
     n_layers = config.N_LAYERS
     x = inputs

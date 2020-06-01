@@ -42,7 +42,6 @@ def u_net_deconv_block(
 
 
 def unet_model():
-    # axis should be fr, time -> right not it's time freqs
     inputs = Input(shape=config.INPUT_SHAPE)
     n_layers = config.N_LAYERS
     x = inputs
